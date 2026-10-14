@@ -1,0 +1,33 @@
+[project]
+name = "alphadata"
+version = "0.1.0"
+description = "Data layer (ETL) cho Alpha research agent"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "duckdb>=1.1",
+    "requests>=2.32",
+    "sqlalchemy>=1.4",
+    "python-dotenv>=1.0",
+    "yfinance>=0.2.50",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg2-binary>=2.9"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[project.scripts]
+alphadata = "alphadata.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/alphadata"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
