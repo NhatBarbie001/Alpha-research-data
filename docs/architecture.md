@@ -316,11 +316,4 @@ Code cũ (commit `68636b0`) đã chạy được Binance, Yahoo, FRED nhưng the
 
 ---
 
-## 11. Câu hỏi cho leader
 
-1. **Có mở rộng được disk server bee thêm ~100 GB (tối thiểu 50 GB) không?** Pilot vừa với 16 GB hiện tại nhưng chỉ còn ~5 GB dự phòng.
-2. Server bee đang chạy service nào khác (dùng 6.7 GB RAM, 33 GB disk)? Có dọn bớt được không?
-3. Đồng ý bộ nguồn ở mục 7 và các hạn chế ở mục 7.3 không? Đặc biệt là việc không có minute cho FX, commodity, index.
-4. Universe pilot ở [specs/universe.md](specs/universe.md) có ổn không?
-5. Có muốn đưa thị trường Việt Nam vào prototype không?
-6. Repo đặt ở GitHub org nào? Team nhận cảnh báo qua Telegram hay Slack?
