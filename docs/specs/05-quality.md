@@ -60,8 +60,9 @@ Mỗi connector chọn check của mình bằng cách override `Dataset.checks()
 | `missing_bars_vs_calendar` | warn | Equity minute và daily: so số nến với `reference.trading_calendar`, liệt kê ngày/phút thiếu |
 | `cross_source_close` | warn | `equity_bars_1d`: chênh lệch close giữa Yahoo và Alpaca > 0.5% |
 | `adj_vs_source` | warn | Giá điều chỉnh tự tính ở gold lệch giá điều chỉnh của Yahoo > 0.5% |
+| `referential` | error | Thay cho khoá ngoại (Parquet không có): mọi `security_id` trong bảng gold và reference phải có trong `security_master`. Danh sách quan hệ ở [04-data-model.md](../04-data-model.md) mục 3 |
 
-Kết quả ghi vào `dq_results` với `run_id` null. Có lệnh `alphadata dq report` in tóm tắt (xem [cli.md](cli.md)).
+Kết quả ghi vào `dq_results` với `run_id` null. Có lệnh `alphadata dq report` in tóm tắt (xem [12-cli.md](12-cli.md)).
 
 ## Done when
 

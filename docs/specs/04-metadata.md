@@ -17,28 +17,15 @@ Lưu metadata vận hành để trả lời: lần chạy nào, tải file nào,
 
 ## Bảng
 
-**`ingestion_runs`**: một dòng cho mỗi lần `run_partition`.
+Năm bảng trong DB `alphadata_meta`. Cột, kiểu, khoá, index ở [04-data-model.md](../04-data-model.md) mục 7.
 
-| Cột | Kiểu | Ghi chú |
+| Bảng | Một dòng là | Dùng để |
 |---|---|---|
-| run_id | uuid PK | |
-| source, dataset | text | |
-| partition | text (JSON, sort keys) | |
-| trigger | text | `cli`, `airflow`, `backfill` |
-| airflow_run_id | text null | |
-| started_at, finished_at | timestamptz | |
-| status | text | `running`, `success`, `failed`, `skipped_not_available` |
-| rows_in, rows_out | int | Dòng mới / tổng dòng của file silver sau merge |
-| silver_path | text | |
-| error | text | Tối đa 4000 ký tự |
-
-**`raw_files`**: `id`, `run_id`, `path`, `url` (đã che key), `sha256`, `bytes`, `fetched_at`, `deleted` (bool).
-
-**`dq_results`**: `id`, `run_id` (null với check sau khi ghi), `table_name`, `check_name`, `severity` (`error` / `warn`), `passed`, `detail`, `checked_at`.
-
-**`table_catalog`**: khoá (`table_name`, `source`). Cột: `layer` (`silver` / `gold`), `dataset`, `description`, `source_url`, `license_note`, `key_cols`, `path_pattern`, `refresh_schedule`, `notes`, `updated_at`. Đây là chỗ trả lời câu hỏi "số này đến từ đâu".
-
-**`backfill_checkpoints`**: `backfill_id`, `dataset`, `partition` (JSON), `status` (`pending` / `done` / `failed`), `attempts`, `last_error`, `updated_at`.
+| `ingestion_runs` | Một lần `run_partition` | Lịch sử chạy, freshness, debug |
+| `raw_files` | Một file raw đã tải | Truy về URL gốc và checksum |
+| `dq_results` | Kết quả một check | Báo cáo DQ, alert |
+| `table_catalog` | Một (bảng, nguồn) | Trả lời "số này đến từ đâu" |
+| `backfill_checkpoints` | Một partition trong một lần backfill | Resume backfill |
 
 ## Hành vi
 

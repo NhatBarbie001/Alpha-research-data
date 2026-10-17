@@ -9,25 +9,14 @@ Gán mỗi chứng khoán một `security_id` nội bộ **không đổi theo th
 
 ## Bảng
 
-**`security_master`**: một dòng cho mỗi chứng khoán.
-
-| Cột | Kiểu | Ghi chú |
-|---|---|---|
-| security_id | int64 | Tăng dần, không bao giờ tái sử dụng |
-| asset_class | text | `equity`, `etf`, `index`, `crypto` |
-| name | text | Tên gần nhất |
-| cik | text null | Từ SEC, cho equity Mỹ |
-| first_seen, last_seen | date | Khoảng có dữ liệu giá hoặc có trong snapshot |
-| status | text | `active`, `delisted`, `unknown` |
-| delist_reason | text null | Nếu biết |
-
-**`security_symbols`**: lịch sử ticker.
-
-| Cột | Ghi chú |
+| Bảng | Một dòng là |
 |---|---|
-| security_id, symbol, symbol_source | `symbol_source`: định dạng ticker của nguồn nào (`yahoo`, `alpaca`, `binance`, `canonical`) |
-| exchange | |
-| valid_from, valid_to | `valid_to = 9999-12-31` nếu còn hiệu lực |
+| `security_master` | Một chứng khoán, khoá `security_id` |
+| `security_symbols` | Một ticker của một chứng khoán theo một nguồn trong một khoảng thời gian |
+
+Cột, kiểu, ràng buộc ở [04-data-model.md](../../04-data-model.md) mục 5. Hai ràng buộc quan trọng nhất:
+- `security_id` không bao giờ tái sử dụng và không đổi khi dựng lại: job đọc bảng cũ, giữ id đã cấp, chỉ cấp id mới cho chứng khoán mới.
+- Với cùng (`symbol_source`, `symbol`), các khoảng hiệu lực không chồng nhau, nên một ticker tại một ngày chỉ ra đúng một `security_id`.
 
 ## Quy tắc dựng
 

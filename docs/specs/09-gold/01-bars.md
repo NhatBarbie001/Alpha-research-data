@@ -9,22 +9,14 @@ Bars sẵn dùng cho research: theo `security_id`, đã chọn nguồn chính, c
 
 ## Bảng
 
-**`bars_1d`**: khoá (`security_id`, `date`).
+| Bảng | Một dòng là | Nội dung |
+|---|---|---|
+| `bars_1d` | Một chứng khoán một ngày | Giá gốc, `split_factor`, `adj_factor`, nguồn, cờ DQ. Equity/ETF từ `equity_bars_1d`; crypto gộp từ `crypto_bars_1m` theo ngày UTC |
+| `bars_1m` | Một chứng khoán một phút | Giá gốc, `split_factor` theo ngày (lấy từ `bars_1d`), không có cổ tức (không cần cho intraday). Crypto: `session = regular`, `split_factor = 1` |
 
-| Cột | Ghi chú |
-|---|---|
-| security_id, date | |
-| open, high, low, close, volume | **Giá gốc** (chưa điều chỉnh gì) |
-| adj_factor | Hệ số nhân để ra giá điều chỉnh split + cổ tức, tính tại thời điểm dựng |
-| split_factor | Hệ số chỉ cho split |
-| source | Nguồn của dòng này (`alpaca` hoặc `yahoo`) |
-| dq_flags | Danh sách cờ warn của dòng (ví dụ `price_jump`, `cross_source_diff`) |
+Cột, kiểu, partition, thứ tự sắp xếp ở [04-data-model.md](../../04-data-model.md) mục 6.
 
 Giá điều chỉnh = giá gốc × `adj_factor`. Không lưu sẵn cột giá điều chỉnh để tránh hai nguồn sự thật.
-
-**`bars_1m`**: khoá (`security_id`, `ts_utc`). Cột: open, high, low, close, volume, trades, vwap, session, source. Có `split_factor` theo ngày (join từ `bars_1d`), không có cổ tức (không cần cho intraday).
-
-Crypto: `bars_1m` cũng chứa crypto (từ `crypto_bars_1m`), `session = "regular"`, `split_factor = 1`.
 
 ## Chọn nguồn cho daily
 
@@ -32,8 +24,9 @@ Crypto: `bars_1m` cũng chứa crypto (từ `crypto_bars_1m`), `session = "regul
 |---|---|---|
 | Từ 2016 | Alpaca (`raw`) | Giá gốc thật, nguồn chính thức hơn |
 | Trước 2016 | Yahoo | Alpaca không có |
+| Crypto (mọi thời điểm) | Binance, gộp từ nến 1 phút theo ngày UTC | Một nguồn duy nhất |
 
-Yahoo `close` đã điều chỉnh split (xem [yahoo.md](../ingestion/sources/yahoo.md)). Để ghép với Alpaca, phải **bỏ điều chỉnh split** cho phần Yahoo bằng `reference.corporate_actions` trước khi ghép. Tại điểm nối (đầu 2016), close của hai nguồn phải lệch < 0.5%, nếu không ghi `cross_source_diff`.
+Yahoo `close` đã điều chỉnh split (xem [07-ingestion/02-sources/03-yahoo.md](../07-ingestion/02-sources/03-yahoo.md)). Để ghép với Alpaca, phải **bỏ điều chỉnh split** cho phần Yahoo bằng `reference.corporate_actions` trước khi ghép. Tại điểm nối (đầu 2016), close của hai nguồn phải lệch < 0.5%, nếu không ghi `cross_source_diff`.
 
 ## Tính `adj_factor`
 

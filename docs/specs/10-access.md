@@ -30,7 +30,7 @@ get_factors(dataset, start, end, *, as_of) -> DataFrame
 | `end` | Bị cắt về `as_of` nếu lớn hơn, kèm warning |
 | `symbols_or_ids` | Nhận ticker (resolve qua `security_master` tại `as_of`) hoặc `security_id` |
 | `freq` | `1min`, `5min`, `15min`, `1h`, `1d`. Tần suất trên 1 phút được **tính từ 1 phút khi query** (DuckDB `time_bucket`), không lưu sẵn |
-| `adjusted` | Nhân `adj_factor`. Docstring ghi rõ: giá điều chỉnh dùng cho lợi nhuận, không dùng làm mức giá PIT (xem [gold/bars.md](gold/bars.md)) |
+| `adjusted` | Nhân `adj_factor`. Docstring ghi rõ: giá điều chỉnh dùng cho lợi nhuận, không dùng làm mức giá PIT (xem [09-gold/01-bars.md](09-gold/01-bars.md)) |
 | `sessions` | Chỉ áp cho minute US |
 
 Resample không tự điền nến trống. Khoảng không có giao dịch thì không có dòng.

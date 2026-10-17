@@ -7,18 +7,11 @@
 
 Trả lời: **tại ngày `t`, những mã nào hợp lệ để agent research?** Một mã hợp lệ khi thuộc universe tại `t` (không dùng thông tin sau `t`) và có đủ dữ liệu.
 
-Phân biệt với [universe.md](../universe.md): `universe` là danh sách cần crawl (tĩnh), còn bảng này là danh sách research theo từng ngày.
+Phân biệt với [06-universe.md](../06-universe.md): `universe` là danh sách cần crawl (tĩnh), còn bảng này là danh sách research theo từng ngày.
 
-## Bảng `universe_daily`
+## Bảng
 
-| Cột | Ghi chú |
-|---|---|
-| universe_code | `SP500`, `US_ETF_CORE`, `US_MINUTE_PILOT`, `CRYPTO_PILOT` |
-| date | Ngày giao dịch |
-| security_id | |
-| has_price | Có bar daily ngày `t` |
-| adv_20d | Giá trị giao dịch trung bình 20 ngày **tính đến `t-1`** (USD) |
-| tradable | `has_price` và `adv_20d` trên ngưỡng tối thiểu (mặc định 1 triệu USD) |
+Ghi bảng `universe_daily`: một dòng cho mỗi (universe, ngày, chứng khoán thuộc universe tại ngày đó), kèm `has_price`, `adv_20d` (tính đến `t-1`) và `tradable` (`has_price` và `adv_20d` trên ngưỡng, mặc định 1 triệu USD). Cột và kiểu ở [04-data-model.md](../../04-data-model.md) mục 6.
 
 ## Định nghĩa
 

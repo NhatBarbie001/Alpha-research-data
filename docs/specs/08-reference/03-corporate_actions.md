@@ -14,16 +14,17 @@ Một bảng split và cổ tức **đã đối chiếu giữa các nguồn**, t
 | Yahoo (`yahoo_corporate_actions`) | Split, cổ tức tiền mặt, lịch sử dài | Spin-off, đổi mã |
 | Alpaca (`alpaca_corporate_actions`) | Split, cổ tức, spin-off, đổi mã (tuỳ endpoint, xác nhận khi có key) | Có thể không có lịch sử dài |
 
-## Bảng `corporate_actions`
+## Bảng
 
-| Cột | Ghi chú |
+Ghi bảng `corporate_actions`, khoá (`security_id`, `ex_date`, `action_type`). Cột và kiểu ở [04-data-model.md](../../04-data-model.md) mục 5.
+
+Ý nghĩa cột `status`:
+
+| status | Khi nào |
 |---|---|
-| security_id, ex_date, action_type | Khoá |
-| ratio | Split: số cổ phiếu mới trên một cổ phiếu cũ (2:1 → 2.0, reverse 1:10 → 0.1) |
-| amount, currency | Cổ tức tiền mặt trên một cổ phiếu |
-| sources | Danh sách nguồn có sự kiện này |
-| status | `confirmed` (≥ 2 nguồn khớp, hoặc 1 nguồn và giá xác nhận), `single_source`, `conflict` |
-| detail | Ghi chú khi `conflict` |
+| `confirmed` | ≥ 2 nguồn khớp, hoặc 1 nguồn và được giá xác nhận (quy tắc 3 bên dưới) |
+| `single_source` | Chỉ 1 nguồn, chưa xác nhận được bằng giá |
+| `conflict` | Các nguồn lệch nhau, hoặc giá không khớp tỷ lệ split |
 
 ## Quy tắc đối chiếu
 

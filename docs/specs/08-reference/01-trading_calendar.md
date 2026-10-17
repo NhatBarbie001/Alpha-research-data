@@ -14,17 +14,9 @@ Biết ngày nào sàn mở cửa và mở mấy giờ, để:
 
 Thư viện Python `exchange_calendars` (mã nguồn mở, chạy offline, không crawl). Lịch được cập nhật theo phiên bản thư viện: ghi phiên bản đang dùng vào catalog, nâng cấp thư viện thì dựng lại bảng.
 
-## Bảng `trading_calendar`
+## Bảng
 
-| Cột | Ghi chú |
-|---|---|
-| exchange | `XNYS` (dùng cho mọi equity và ETF Mỹ), `CRYPTO` (24/7) |
-| date | |
-| is_open | |
-| open_utc, close_utc | Giờ phiên chính, UTC. Null nếu đóng cửa |
-| early_close | bool |
-| pre_open_utc, post_close_utc | Mỹ: 04:00 và 20:00 giờ New York, đổi sang UTC theo ngày |
-| source | `exchange_calendars==<phiên bản>` |
+Ghi bảng `trading_calendar` (một dòng cho mỗi sàn mỗi ngày, khoá `exchange, date`). Cột và kiểu ở [04-data-model.md](../../04-data-model.md) mục 5.
 
 Phủ từ 2000-01-01 đến cuối năm sau năm hiện tại. Dựng lại mỗi năm một lần hoặc khi nâng cấp thư viện.
 

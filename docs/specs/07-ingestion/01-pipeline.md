@@ -105,7 +105,7 @@ Mỗi sub package nguồn gọi `register(MyDataset())` trong `__init__.py`. `in
 4. Test với dữ liệu giả trong `tests/ingestion/sources/<nguồn>/` (không gọi mạng).
 5. Chạy thử: `alphadata run <dataset> key=value`.
 6. Thêm universe trong `config/universe/` và lịch trong `orchestration/schedules.py`.
-7. Cập nhật bảng nguồn trong [architecture.md](../../architecture.md) mục 7.
+7. Cập nhật bảng nguồn trong [02-architecture.md](../../02-architecture.md) mục 6.
 
 ## Done when
 

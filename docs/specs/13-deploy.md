@@ -1,6 +1,6 @@
 # Spec: `deploy`
 
-> Code: `deploy/` (ngoài package, thay cho `infra/` cũ) · Tầng: vận hành · Phase 0
+> Code: `deploy/` (ngoài package) · Tầng: vận hành · Phase 0
 > Phụ thuộc: package `alphadata`, `orchestration/dags/`
 
 ## Mục đích
@@ -28,7 +28,7 @@ Dựng toàn bộ stack trên server bee bằng Docker Compose: Airflow 3 + Post
 
 ## Biến môi trường
 
-Từ `.env` ở repo root (không commit, có `.env.example`): `ALPHADATA_ROOT=/data/alphadata`, `ALPHADATA_META_DB_URL`, `ALPHADATA_MIN_FREE_GB`, các API key (xem [core.md](core.md)), mật khẩu Postgres và Airflow (đổi mọi giá trị `change-me`), token Telegram.
+Từ `.env` ở repo root (không commit, có `.env.example`): `ALPHADATA_ROOT=/data/alphadata`, `ALPHADATA_META_DB_URL`, `ALPHADATA_MIN_FREE_GB`, các API key (xem [01-core.md](01-core.md)), mật khẩu Postgres và Airflow (đổi mọi giá trị `change-me`), token Telegram.
 
 ## Giới hạn tài nguyên
 
@@ -60,10 +60,10 @@ docker builder prune -f                  # xoá cache build, tiết kiệm disk
 1. Kiểm tra 33 GB disk đang dùng là gì, có dọn được không (`sudo du -xh --max-depth=1 /`, `docker system df`).
 2. Hỏi leader các service đang chạy trên server, để không ảnh hưởng chúng.
 3. Kiểm tra: SSD hay HDD, đã có Docker / Compose chưa, có sudo không, ra Internet được không.
-4. Thử lại từ server các nguồn bị lỗi mạng ở máy dev (Dukascopy, Cboe), ghi kết quả vào [architecture.md](../architecture.md) mục 7.2.
+4. Thử lại từ server các nguồn bị lỗi mạng ở máy dev (Dukascopy, Cboe), ghi kết quả vào [02-architecture.md](../02-architecture.md) mục 6.2.
 
 ## Done when
 
 - `docker compose up` từ repo sạch lên được stack, DAG hiện trên UI.
-- Image Airflow + venv dưới 3.5 GB (đo bản cũ: 3.5 GB).
+- Image Airflow + venv dưới 3.5 GB.
 - Backup Postgres restore thử thành công.

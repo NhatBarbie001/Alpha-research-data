@@ -9,28 +9,12 @@ Dữ liệu macro, factor và fundamentals ở dạng **point-in-time**: với m
 
 ## Bảng
 
-**`macro_pit`**: khoá (`series_key`, `obs_date`, `available_from`).
+| Bảng | Một dòng là | Dựng thế nào |
+|---|---|---|
+| `macro_pit` | Một vintage của một quan sát | Gộp `macro_observations` của mọi nguồn, `series_key = "<source>:<series_id>"`, thêm `frequency`, `units` từ `macro_series`. Factor Fama-French cũng vào đây (`french:ff3_daily:HML`), với `available_from = date + 1 ngày` cho lần tải đầu và `= vintage_date` cho các vintage sau |
+| `fundamentals_pit` | Một số liệu trong một filing | Từ `fundamentals_facts`, ánh xạ `cik` → `security_id`. `available_from = filed_date + 1 ngày` (báo cáo có thể nộp sau giờ đóng cửa); `available_to` = ngày trước filing kế tiếp sửa cùng số liệu, hoặc `9999-12-31` |
 
-| Cột | Ghi chú |
-|---|---|
-| series_key | `<source>:<series_id>`, ví dụ `fred:CPIAUCSL`, `treasury:par_10y` |
-| obs_date, value | |
-| available_from, available_to | Từ silver |
-| vintage_kind | `official` / `observed` |
-| frequency, units | Từ `macro_series` |
-
-Gồm cả factor Fama-French (`french:ff3_daily:HML`), với `available_from = vintage_date` cho vintage sau lần tải đầu, và `= date + 1 ngày` cho lần tải đầu.
-
-**`fundamentals_pit`**: khoá (`security_id`, `concept`, `period_end`, `available_from`).
-
-| Cột | Ghi chú |
-|---|---|
-| security_id | Map từ `cik` qua `security_master` |
-| concept, unit, value | |
-| period_start, period_end, fiscal_period | |
-| available_from | `filed_date + 1 ngày` (báo cáo có thể nộp sau giờ đóng cửa) |
-| available_to | Ngày filing kế tiếp sửa cùng số liệu, hoặc `9999-12-31` |
-| form, accession | |
+Cột, kiểu, khoá ở [04-data-model.md](../../04-data-model.md) mục 6.
 
 ## Quy tắc PIT
 

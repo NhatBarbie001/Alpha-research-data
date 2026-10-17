@@ -5,7 +5,7 @@
 
 ## Mục đích
 
-Lên lịch, retry và cảnh báo cho mọi job. Orchestration **không chứa logic dữ liệu**: mọi task chỉ gọi hàm của các module khác (`run_partition`, job dựng gold, check sau khi ghi). Trước đây DAG nằm ở `dags/` ngoài package và tự viết danh sách lịch; nay nó là một module như các tầng khác, và lịch được khai báo một chỗ.
+Lên lịch, retry và cảnh báo cho mọi job. Orchestration **không chứa logic dữ liệu**: mọi task chỉ gọi hàm của các module khác (`run_partition`, job dựng gold, check sau khi ghi). Lịch của mọi job được khai báo ở một chỗ duy nhất (`schedules.py`).
 
 ## File
 
@@ -16,7 +16,7 @@ Lên lịch, retry và cảnh báo cho mọi job. Orchestration **không chứa 
 | `alerts.py` | Callback khi task fail: gửi Telegram (hoặc Slack) |
 | `dags/alphadata_dags.py` | Entrypoint duy nhất Airflow đọc: gọi `factory.build_all()` |
 
-Thư mục `dags/` được mount vào `/opt/airflow/dags` trong container (xem [deploy.md](deploy.md)). Airflow import file này bằng Python của Airflow, không có package `alphadata` (package nằm trong virtualenv riêng). Vì vậy `factory.py` và `schedules.py` **chỉ dùng thư viện chuẩn và Airflow**, không import gì khác của `alphadata` ở top-level; task gọi vào `alphadata` qua `@task.external_python`.
+Thư mục `dags/` được mount vào `/opt/airflow/dags` trong container (xem [13-deploy.md](13-deploy.md)). Airflow import file này bằng Python của Airflow, không có package `alphadata` (package nằm trong virtualenv riêng). Vì vậy `factory.py` và `schedules.py` **chỉ dùng thư viện chuẩn và Airflow**, không import gì khác của `alphadata` ở top-level; task gọi vào `alphadata` qua `@task.external_python`.
 
 ## Khai báo lịch
 

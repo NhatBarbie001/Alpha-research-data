@@ -2,27 +2,34 @@
 
 Crawl dữ liệu thị trường và macro từ nguồn miễn phí → lưu bản gốc (bronze) → chuẩn hoá, kiểm tra chất lượng (silver, Parquet) → bảng sẵn cho research, point-in-time (gold) → agent đọc qua API read-only. Airflow chạy theo lịch trên server bee.
 
-> Trạng thái: **đang viết lại theo kiến trúc mới.** Code cũ (commit `68636b0`) đã bị xoá; repo hiện chỉ có tài liệu.
+## Đọc theo thứ tự
 
-## Tài liệu
+| # | Tài liệu | Trả lời câu hỏi |
+|---|---|---|
+| 1 | [docs/01-problem.md](docs/01-problem.md) | Bài toán là gì, vì sao khó, ràng buộc gì, thế nào là xong |
+| 2 | [docs/02-architecture.md](docs/02-architecture.md) | Có những tầng và module nào, đặt ở đâu, dùng nguồn dữ liệu nào |
+| 3 | [docs/03-how-it-works.md](docs/03-how-it-works.md) | Các module gọi nhau thế nào khi chạy, dữ liệu đi đâu, lỗi xử lý ra sao |
+| 4 | [docs/04-data-model.md](docs/04-data-model.md) | Thiết kế database: mọi bảng, cột, kiểu, khoá, quan hệ, lưu trữ vật lý, phân quyền |
+| 5 | [docs/specs/](docs/specs/) | Chi tiết từng module, đọc theo số thứ tự bên dưới |
 
-- [docs/architecture.md](docs/architecture.md): kiến trúc tổng thể, ràng buộc, cấu trúc thư mục, **danh sách nguồn đã chốt**, lộ trình, câu hỏi cho leader.
-- [docs/specs/](docs/specs/): mỗi module hoặc sub module một spec, cấu trúc giống `src/alphadata/`.
+### Spec
 
-| Nhóm | Spec |
-|---|---|
-| Xuyên suốt | [core](docs/specs/core.md) · [storage](docs/specs/storage.md) · [metadata](docs/specs/metadata.md) · [quality](docs/specs/quality.md) · [schemas](docs/specs/schemas.md) · [universe](docs/specs/universe.md) |
-| Ingestion | [pipeline](docs/specs/ingestion/pipeline.md) |
-| Nguồn P1 | [binance](docs/specs/ingestion/sources/binance.md) · [alpaca](docs/specs/ingestion/sources/alpaca.md) · [yahoo](docs/specs/ingestion/sources/yahoo.md) · [fred](docs/specs/ingestion/sources/fred.md) |
-| Nguồn P2 | [sec_edgar](docs/specs/ingestion/sources/sec_edgar.md) · [sp500_constituents](docs/specs/ingestion/sources/sp500_constituents.md) · [nasdaq_trader](docs/specs/ingestion/sources/nasdaq_trader.md) · [french](docs/specs/ingestion/sources/french.md) · [treasury](docs/specs/ingestion/sources/treasury.md) · [nyfed](docs/specs/ingestion/sources/nyfed.md) |
-| Nguồn P3, P4 | [eia](docs/specs/ingestion/sources/eia.md) · [bls](docs/specs/ingestion/sources/bls.md) · [bea](docs/specs/ingestion/sources/bea.md) · [ecb](docs/specs/ingestion/sources/ecb.md) · [worldbank](docs/specs/ingestion/sources/worldbank.md) · [imf](docs/specs/ingestion/sources/imf.md) · [oecd](docs/specs/ingestion/sources/oecd.md) |
-| Reference | [security_master](docs/specs/reference/security_master.md) · [trading_calendar](docs/specs/reference/trading_calendar.md) · [corporate_actions](docs/specs/reference/corporate_actions.md) · [index_membership](docs/specs/reference/index_membership.md) |
-| Gold | [bars](docs/specs/gold/bars.md) · [universe_daily](docs/specs/gold/universe_daily.md) · [macro_pit](docs/specs/gold/macro_pit.md) |
-| Access, vận hành | [access](docs/specs/access.md) · [orchestration](docs/specs/orchestration.md) · [cli](docs/specs/cli.md) · [deploy](docs/specs/deploy.md) |
+| # | Nhóm | Spec |
+|---|---|---|
+| 01–06 | Xuyên suốt | [01 core](docs/specs/01-core.md) · [02 storage](docs/specs/02-storage.md) · [03 schemas](docs/specs/03-schemas.md) · [04 metadata](docs/specs/04-metadata.md) · [05 quality](docs/specs/05-quality.md) · [06 universe](docs/specs/06-universe.md) |
+| 07 | Ingestion | [01 pipeline](docs/specs/07-ingestion/01-pipeline.md) |
+| 07.02 | Nguồn P1 | [01 binance](docs/specs/07-ingestion/02-sources/01-binance.md) · [02 alpaca](docs/specs/07-ingestion/02-sources/02-alpaca.md) · [03 yahoo](docs/specs/07-ingestion/02-sources/03-yahoo.md) · [04 fred](docs/specs/07-ingestion/02-sources/04-fred.md) |
+| 07.02 | Nguồn P2 | [05 sec_edgar](docs/specs/07-ingestion/02-sources/05-sec_edgar.md) · [06 sp500_constituents](docs/specs/07-ingestion/02-sources/06-sp500_constituents.md) · [07 nasdaq_trader](docs/specs/07-ingestion/02-sources/07-nasdaq_trader.md) · [08 french](docs/specs/07-ingestion/02-sources/08-french.md) · [09 treasury](docs/specs/07-ingestion/02-sources/09-treasury.md) · [10 nyfed](docs/specs/07-ingestion/02-sources/10-nyfed.md) |
+| 07.02 | Nguồn P3, P4 | [11 eia](docs/specs/07-ingestion/02-sources/11-eia.md) · [12 bls](docs/specs/07-ingestion/02-sources/12-bls.md) · [13 bea](docs/specs/07-ingestion/02-sources/13-bea.md) · [14 ecb](docs/specs/07-ingestion/02-sources/14-ecb.md) · [15 worldbank](docs/specs/07-ingestion/02-sources/15-worldbank.md) · [16 imf](docs/specs/07-ingestion/02-sources/16-imf.md) · [17 oecd](docs/specs/07-ingestion/02-sources/17-oecd.md) |
+| 08 | Reference | [01 trading_calendar](docs/specs/08-reference/01-trading_calendar.md) · [02 security_master](docs/specs/08-reference/02-security_master.md) · [03 corporate_actions](docs/specs/08-reference/03-corporate_actions.md) · [04 index_membership](docs/specs/08-reference/04-index_membership.md) |
+| 09 | Gold | [01 bars](docs/specs/09-gold/01-bars.md) · [02 universe_daily](docs/specs/09-gold/02-universe_daily.md) · [03 macro_pit](docs/specs/09-gold/03-macro_pit.md) |
+| 10–13 | Access, vận hành | [10 access](docs/specs/10-access.md) · [11 orchestration](docs/specs/11-orchestration.md) · [12 cli](docs/specs/12-cli.md) · [13 deploy](docs/specs/13-deploy.md) |
+
+Thứ tự spec theo hướng phụ thuộc: module được module khác dùng thì đứng trước. Nếu chỉ cần viết một connector mới: đọc ba tài liệu đầu, rồi [docs/specs/07-ingestion/01-pipeline.md](docs/specs/07-ingestion/01-pipeline.md) và một spec nguồn mẫu như [docs/specs/07-ingestion/02-sources/01-binance.md](docs/specs/07-ingestion/02-sources/01-binance.md).
 
 ## Quy ước
 
-- Thêm module mới thì viết spec trước, đặt trong `docs/specs/` theo đúng vị trí của module trong `src/alphadata/`.
-- Thêm nguồn mới: xem mục "Thêm một nguồn mới" trong [ingestion/pipeline.md](docs/specs/ingestion/pipeline.md).
-- Chỉ dùng nguồn miễn phí, gọi được bằng chương trình, điều khoản cho phép dùng nội bộ. Nguồn bị loại và lý do ở [architecture.md](docs/architecture.md) mục 7.2.
+- Thêm module mới thì viết spec trước, đặt trong `docs/specs/` theo đúng vị trí của module trong `src/alphadata/`, tên file `NN-<tên module>.md`.
+- Thêm nguồn mới: xem [docs/03-how-it-works.md](docs/03-how-it-works.md) mục 11 và [docs/specs/07-ingestion/01-pipeline.md](docs/specs/07-ingestion/01-pipeline.md).
+- Chỉ dùng nguồn miễn phí, gọi được bằng chương trình, điều khoản cho phép dùng nội bộ. Nguồn bị loại và lý do ở [docs/02-architecture.md](docs/02-architecture.md) mục 6.2.
 - Không commit API key, không commit data.

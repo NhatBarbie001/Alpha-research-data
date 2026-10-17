@@ -29,7 +29,7 @@ Mọi thao tác đọc ghi file của lake đi qua module này: bố cục thư 
 
 - Thứ tự `k=v` trong raw: các `partition_keys` của dataset theo thứ tự khai báo, sau đó các khoá còn lại theo alphabet.
 - `fetch_date` là ngày UTC lúc tải. Tải lại cùng partition vào ngày khác thì tạo thư mục mới, không ghi đè raw cũ.
-- Partition của silver do từng dataset quyết định (xem [schemas.md](schemas.md)). Quy tắc chung: minute theo `symbol/year/month`, daily theo `symbol`, macro theo `source/series_id`.
+- Partition của silver do từng dataset quyết định (xem [03-schemas.md](03-schemas.md)). Quy tắc chung: minute theo `symbol/year/month`, daily theo `symbol`, macro theo `source/series_id`.
 
 ## Raw
 

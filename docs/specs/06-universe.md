@@ -1,13 +1,13 @@
 # Spec: `universe`
 
 > Code: `src/alphadata/universe/`, dữ liệu trong `config/universe/` · Tầng: xuyên suốt · Phase 0
-> Phụ thuộc: `core`
+> Phụ thuộc: `core`, `storage` (chỉ để đọc bảng gold cho universe sinh ra)
 
 ## Mục đích
 
 Khai báo **cần crawl những mã và series nào**. CLI, backfill và orchestration đều đọc từ đây, không ai tự viết danh sách mã trong code.
 
-Phân biệt với [gold/universe_daily.md](gold/universe_daily.md): `universe` là phạm vi crawl (cấu hình tĩnh), còn `universe_daily` là tập mã hợp lệ để research tại từng ngày (tính từ dữ liệu, có xét survivorship).
+Phân biệt với [09-gold/02-universe_daily.md](09-gold/02-universe_daily.md): `universe` là phạm vi crawl (cấu hình tĩnh), còn `universe_daily` là tập mã hợp lệ để research tại từng ngày (tính từ dữ liệu, có xét survivorship).
 
 ## Định dạng
 
@@ -59,7 +59,7 @@ Lỗi khi: file thiếu trường bắt buộc, `dataset` không có trong regis
 | `fred_core.yaml` | `fred_series` | ~30 series chính có vintage (lãi suất, CPI, PCE, việc làm, GDP, dầu, USD index, VIX, spread tín dụng) | Dài nhất có thể |
 | `fred_wide.yaml` | `fred_series_current` | ~500 series mở rộng (không lấy vintage, chỉ bản hiện hành + ghi nhận hằng ngày) | Dài nhất có thể |
 
-`sp500_daily.yaml` là universe sinh ra: file chỉ khai báo `generated_from: reference.index_membership`, loader gọi module reference để lấy danh sách.
+`sp500_daily.yaml` là universe sinh ra: file chỉ khai báo `generated_from: gold/index_membership`. Loader đọc thẳng file Parquet của bảng đó qua `storage` (không import module `reference`, để giữ đúng hướng phụ thuộc). Bảng chưa được dựng thì loader báo lỗi rõ ràng.
 
 ## Done when
 

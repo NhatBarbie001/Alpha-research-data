@@ -53,7 +53,7 @@ Sau 06:00 UTC hằng ngày (SEC cập nhật bulk hằng đêm, giờ Mỹ).
 
 ## Dung lượng
 
-S&P 500, 10 năm, chỉ `us-gaap` + `dei`: ước 2–5 GB. **Chỉ làm sau khi có thêm disk** (xem [architecture.md](../../../architecture.md) mục 2). Trước đó chỉ chạy `sec_company_tickers`.
+S&P 500, 10 năm, chỉ `us-gaap` + `dei`: ước 2–5 GB. **Chỉ làm sau khi có thêm disk** (xem [02-architecture.md](../../../02-architecture.md) mục 5.2). Trước đó chỉ chạy `sec_company_tickers`.
 
 ## Done when
 

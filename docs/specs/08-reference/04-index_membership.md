@@ -12,18 +12,11 @@ Cho biết **mã nào thuộc S&P 500 tại từng ngày** trong quá khứ. Đ�
 - `index_constituent_snapshots` (GitHub fja05680, từ 1996, cập nhật thủ công bởi tác giả).
 - `index_constituent_changes` và snapshot hiện tại (Wikipedia).
 
-Xem [ingestion/sources/sp500_constituents.md](../ingestion/sources/sp500_constituents.md).
+Xem [07-ingestion/02-sources/06-sp500_constituents.md](../07-ingestion/02-sources/06-sp500_constituents.md).
 
-## Bảng `index_membership`
+## Bảng
 
-| Cột | Ghi chú |
-|---|---|
-| index_code | `SP500` |
-| security_id | |
-| symbol | Ticker tại thời điểm vào index (để tra cứu) |
-| valid_from | Ngày đầu tiên thuộc index |
-| valid_to | Ngày cuối cùng thuộc index, `9999-12-31` nếu còn |
-| source | `fja05680`, `wikipedia`, hoặc cả hai |
+Ghi bảng `index_membership`: một dòng cho mỗi khoảng thời gian một ticker thuộc index (`valid_from` đến `valid_to`, cả hai đầu đều tính). Cột và kiểu ở [04-data-model.md](../../04-data-model.md) mục 5.
 
 ## Quy tắc dựng
 
