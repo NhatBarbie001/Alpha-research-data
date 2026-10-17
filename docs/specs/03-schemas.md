@@ -49,7 +49,7 @@ class TableSchema:
 ## Hành vi
 
 - `conform(df, schema) -> DataFrame`: sắp xếp cột theo thứ tự trong schema, ép kiểu, thêm cột partition suy ra. Thiếu cột không null hoặc kiểu không ép được thì raise `SchemaMismatch`. Cột thừa thì raise (không âm thầm bỏ).
-- `storage.write_parquet_atomic` gọi `conform` trước khi ghi.
+- Pipeline gọi `conform` trước, rồi `storage.write_parquet_atomic(df, path, schema=table.arrow_schema())`. `storage` kiểm lại hợp đồng bằng Arrow schema nhưng không import `schemas` (đúng hướng phụ thuộc `storage ◄─ schemas`). `SchemaMismatch` nằm trong `core.errors` để hai module dùng chung.
 - `quality.schema_match` dùng `schema` để kiểm tra null và enum.
 - `access.views` dùng `path_pattern()` để tạo view DuckDB cho mọi bảng có file.
 
