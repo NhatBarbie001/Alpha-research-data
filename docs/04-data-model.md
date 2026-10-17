@@ -403,7 +403,7 @@ Không lưu cột giá đã điều chỉnh: giá điều chỉnh = giá gốc �
 | universe_code | string | `SP500` / `US_ETF_CORE` / `US_MINUTE_PILOT` / `CRYPTO_PILOT` |
 | date | date | Ngày giao dịch |
 | security_id | int64 | |
-| has_price | bool | Có bar daily ngày `date` |
+| has_price | bool | Có bar daily ngày `date`. Mã thiếu giá vẫn có dòng với `false`, không bị bỏ |
 | adv_20d | float64 (null) | Giá trị giao dịch trung bình 20 ngày, **tính đến `date - 1`**, USD |
 | tradable | bool | `has_price` và `adv_20d` trên ngưỡng |
 

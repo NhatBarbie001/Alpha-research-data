@@ -105,7 +105,7 @@ Prototype được coi là xong khi:
 
 - [ ] Mọi bảng đều có `source` và có trong catalog.
 - [ ] Mọi số macro và fundamentals có `available_from`; có test PIT với CPI, GDP và một công ty mẫu.
-- [ ] Universe S&P 500 theo ngày có cả mã đã bị loại hoặc hủy niêm yết.
+- [ ] Universe S&P 500 theo ngày có cả mã đã bị loại hoặc hủy niêm yết. Độ phủ giá của các mã này được đo, công bố theo năm, và agent được cảnh báo khi thiếu.
 - [ ] Có cả giá gốc và giá điều chỉnh; các split lớn đã biết được điều chỉnh đúng.
 - [ ] Chạy lại được toàn bộ silver và gold từ raw mà không crawl lại.
 - [ ] Các job hằng ngày chạy ổn định một tuần trên server bee; có cảnh báo khi lỗi.

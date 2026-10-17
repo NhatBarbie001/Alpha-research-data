@@ -258,7 +258,7 @@ Thư viện offline (không crawl): `exchange_calendars` cho lịch sàn, xem [s
 
 | Hạn chế | Hậu quả | Cách giảm nhẹ |
 |---|---|---|
-| Giá của mã đã hủy niêm yết khó có (Yahoo và Alpaca thường không trả) | Survivorship bias trong backtest US equity | `gold.universe_daily` xuất báo cáo mã thuộc universe nhưng không có giá. Kết quả backtest phải kèm con số này |
+| Giá của mã đã hủy niêm yết khó có (Yahoo và Alpaca thường không trả). Dữ liệu có thì đúng, nhưng bị khuyết | Survivorship bias trong backtest US equity: mã thiếu giá coi như không tồn tại, mà mã hay thiếu lại là mã phá sản | Vẫn dùng Yahoo (tắt đi thì mất hết daily trước 2016 và index). Đo độ phủ, đánh dấu `has_price = false`, check `price_coverage` (dưới 70% thì alert leader), API phát `SurvivorshipWarning`. Không chặn pipeline. Chi tiết ở [specs/09-gold/02-universe_daily.md](specs/09-gold/02-universe_daily.md) |
 | Yahoo không chính thức | Có thể hỏng bất cứ lúc nào | Đối chiếu với Alpaca daily (từ 2016). Connector Yahoo báo lỗi rõ khi format đổi |
 | Minute pilot chỉ từ 2024 | Ít chế độ thị trường để kiểm chứng | Mở rộng về 2016 (Alpaca) và 2018 (Binance) khi có thêm disk |
 | Không có minute cho FX, commodity, index | Không làm được alpha intraday cho các nhóm này | Chấp nhận ở prototype |

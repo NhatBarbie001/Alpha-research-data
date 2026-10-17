@@ -59,6 +59,7 @@ Mỗi connector chọn check của mình bằng cách override `Dataset.checks()
 | `freshness` | warn | Dataset không có run thành công trong N giờ (N khai báo trong `orchestration/schedules.py`) |
 | `missing_bars_vs_calendar` | warn | Equity minute và daily: so số nến với `reference.trading_calendar`, liệt kê ngày/phút thiếu |
 | `cross_source_close` | warn | `equity_bars_1d`: chênh lệch close giữa Yahoo và Alpaca > 0.5% |
+| `price_coverage` | warn | `universe_daily`: độ phủ giá theo năm (định nghĩa và ngưỡng 90% / 70% ở [09-gold/02-universe_daily.md](09-gold/02-universe_daily.md)). Dưới 70% thì thêm alert gửi leader. Không bao giờ chặn pipeline |
 | `adj_vs_source` | warn | Giá điều chỉnh tự tính ở gold lệch giá điều chỉnh của Yahoo > 0.5% |
 | `referential` | error | Thay cho khoá ngoại (Parquet không có): mọi `security_id` trong bảng gold và reference phải có trong `security_master`. Danh sách quan hệ ở [04-data-model.md](../04-data-model.md) mục 3 |
 

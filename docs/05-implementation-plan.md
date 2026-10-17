@@ -184,13 +184,13 @@ P0-01 ─┬─► P0-02 ─┬─► P0-03 ─► P0-04 ─┐
 | P2-05 | `reference.corporate_actions`: gộp Yahoo + Alpaca, trạng thái `confirmed` / `single_source` / `conflict` | [08-reference/03-corporate_actions](specs/08-reference/03-corporate_actions.md) | P2-04 | A | 1.5 | Danh sách split mẫu ở gate G2 đúng ngày, đúng tỷ lệ |
 | P2-06 | `reference.index_membership` + sinh `sp500_daily.yaml` | [08-reference/04-index_membership](specs/08-reference/04-index_membership.md) | P2-04 | B | 1.5 | Số thành phần mỗi ngày nằm trong 500–505 |
 | P2-07 | Check `referential`; DAG `reference_rebuild`; lệnh `build reference` | [05-quality](specs/05-quality.md), [11-orchestration](specs/11-orchestration.md) | P2-04 → P2-06 | A | 0.5 | Cố tình thêm `security_id` lạ vào reference thì check `error` |
-| P2-08 | Backfill Yahoo daily cho `sp500_daily` (mọi mã từng thuộc, từ 2005) | | P2-06 | A | 0.5 + thời gian chạy | Mọi checkpoint `done` hoặc `failed` có lý do (mã không có trên Yahoo) |
+| P2-08 | Backfill Yahoo daily cho `sp500_daily` (mọi mã từng thuộc, từ 2005) | | P2-06 | A | 0.5 + thời gian chạy | Mọi checkpoint `done` hoặc `failed` có lý do (mã không có trên Yahoo); danh sách mã không tải được giá dùng cho bước đo độ phủ ở G2 |
 
 ### 6.2 Gate G2
 
 - [ ] Số thành phần S&P 500 nằm trong 500–505 với **mọi** ngày giao dịch từ 2005.
 - [ ] Đúng với một số sự kiện đã biết, ví dụ Lehman Brothers bị loại tháng 9/2008, TSLA vào ngày 2020-12-21.
-- [ ] **Độ phủ giá của mã đã bị loại:** đo tỷ lệ mã từng thuộc S&P 500 có giá Yahoo trong khoảng thời gian là thành viên. Ghi con số và danh sách thiếu. Dưới 90% thì báo leader trước khi sang phase 3, vì đây là giới hạn của nguồn miễn phí và ảnh hưởng trực tiếp đến survivorship bias.
+- [ ] **Độ phủ giá đã được đo** theo định nghĩa ở [specs/09-gold/02-universe_daily.md](specs/09-gold/02-universe_daily.md) (query trên silver `yahoo_daily` + `alpaca_bars_1d` và `index_membership`, vì `universe_daily` đến phase 3 mới có). Con số theo năm từ 2005 và danh sách mã không có giá ngày nào được ghi vào issue của gate. **Không phải điều kiện chặn:** độ phủ thấp không dừng phase 3. Năm nào dưới 70% thì báo leader để biết, pipeline vẫn tiếp tục. Lý do: nguồn miễn phí khuyết giá mã đã hủy niêm yết, không sửa được trong ngân sách 0 USD; tắt Yahoo còn mất hết daily trước 2016 và index. Cách xử lý là đánh dấu và cảnh báo (làm ở P3-03, P3-05).
 - [ ] Split mẫu đúng ngày và tỷ lệ: NVDA 2024-06-10 (10:1), AAPL 2020-08-31 (4:1), TSLA 2020-08-31 (5:1) và 2022-08-25 (3:1), AMZN 2022-06-06 (20:1), GOOGL 2022-07-18 (20:1).
 - [ ] Mọi corporate action trạng thái `conflict` đã được xem; ca cần sửa đi qua `security_overrides.yaml`, không sửa tay dữ liệu.
 - [ ] Check `referential` qua.
@@ -207,9 +207,9 @@ P0-01 ─┬─► P0-02 ─┬─► P0-03 ─► P0-04 ─┐
 |---|---|---|---|---|---|---|
 | P3-01 | `gold.bars_1d`: ghép Alpaca (từ 2016) + Yahoo (trước 2016, bỏ điều chỉnh split), crypto gộp từ 1m, tính `split_factor`, `adj_factor` | [09-gold/01-bars](specs/09-gold/01-bars.md) | G2 | A | 2 | Không có ngày nhảy giá tại các split mẫu; điểm nối 2016 lệch < 0.5% |
 | P3-02 | `gold.bars_1m` | [09-gold/01-bars](specs/09-gold/01-bars.md) | P3-01 | A | 1 | Số dòng bằng tổng silver tương ứng; `split_factor` khớp `bars_1d` |
-| P3-03 | `gold.universe_daily` | [09-gold/02-universe_daily](specs/09-gold/02-universe_daily.md) | G2, P3-01 | B | 1 | Universe S&P 500 ngày 2008-09-12 có Lehman |
+| P3-03 | `gold.universe_daily` + check `price_coverage` | [09-gold/02-universe_daily](specs/09-gold/02-universe_daily.md), [05-quality](specs/05-quality.md) | G2, P3-01 | B | 1 | Universe S&P 500 ngày 2008-09-12 có Lehman; mã thiếu giá vẫn có dòng `has_price = false`; `price_coverage` ghi độ phủ theo năm, dưới 70% có alert |
 | P3-04 | `gold.macro_pit` | [09-gold/03-macro_pit](specs/09-gold/03-macro_pit.md) | G2 | B | 1.5 | Test PIT CPI, GDP trên gold cho kết quả như trên silver |
-| P3-05 | `access`: `views.connect()`, `get_bars`, `get_macro`, `get_universe`, `get_factors`; kết nối read-only | [10-access](specs/10-access.md) | P3-01 → P3-04 | A | 2 | Các mục "Done when" của spec |
+| P3-05 | `access`: `views.connect()`, `get_bars`, `get_macro`, `get_universe`, `get_coverage`, `get_factors`, `SurvivorshipWarning`; kết nối read-only | [10-access](specs/10-access.md) | P3-01 → P3-04 | A | 2 | Các mục "Done when" của spec |
 | P3-06 | Bộ test PIT đầu-cuối: CPI, GDP, một công ty mẫu; `get_*` thiếu `as_of` thì lỗi; `end > as_of` bị cắt | [10-access](specs/10-access.md) | P3-05 | B | 1 | Chạy trong CI trên lake fixture nhỏ |
 | P3-07 | Check `adj_vs_source`; DAG `gold_rebuild`; lệnh `build gold` | [05-quality](specs/05-quality.md), [11-orchestration](specs/11-orchestration.md) | P3-01 → P3-04 | A | 0.5 | DAG chạy sau `reference_rebuild` |
 | P3-08 | Runbook truy vết một con số (gold → silver → raw → URL) theo [03-how-it-works.md](03-how-it-works.md) mục 10, thử với 3 con số | [03-how-it-works](03-how-it-works.md) | P3-05 | B | 0.5 | Người không viết code làm theo runbook truy được trong < 10 phút |
@@ -219,7 +219,7 @@ P0-01 ─┬─► P0-02 ─┬─► P0-03 ─► P0-04 ─┐
 - [ ] Mọi tiêu chí ở [01-problem.md](01-problem.md) mục 5 được đánh dấu, mỗi tiêu chí có bằng chứng.
 - [ ] Lợi nhuận tổng của SPY 2016–2025 tính từ `bars_1d` lệch < 0.1%/năm so với `adj_close` của Yahoo.
 - [ ] `get_bars(["BTCUSDT"], ..., freq="1h")` khớp tự resample bằng pandas.
-- [ ] Agent gọi được API từ môi trường của agent (một notebook mẫu chạy đầu-cuối).
+- [ ] Agent gọi được API từ môi trường của agent (một notebook mẫu chạy đầu-cuối). Notebook in kèm `get_coverage("SP500", ...)` cho giai đoạn backtest.
 - [ ] Query `get_bars` 1 năm daily cho 500 mã chạy < 5 giây trên bee với `memory_limit = 2GB`.
 - [ ] Tuần ổn định: mọi DAG chạy 1 tuần liền không sửa tay.
 
@@ -268,7 +268,7 @@ Không cắt: các test PIT, check `referential`, rebuild offline, alert. Đây 
 |---|---|---|
 | Airflow 3 + `external_python` khó dựng, hoặc tốn RAM hơn dự tính | P0-11 trễ quá 1 ngày | Tạm chạy bằng cron + CLI (CLI đã đủ để chạy mọi việc), giữ Airflow cho sau |
 | Disk thực tế vượt ước tính | Số đo ở G0, G1 | Giảm universe minute pilot, rút lịch sử minute về 2025, xin thêm disk sớm |
-| Yahoo thiếu nhiều mã đã bị loại | Độ phủ đo ở G2 | Ghi rõ giới hạn trong catalog và trong docstring `get_universe`; leader quyết có chấp nhận không |
+| Yahoo thiếu giá nhiều mã đã hủy niêm yết (dữ liệu khuyết, không phải sai) | Độ phủ đo ở G2, check `price_coverage` hằng ngày từ phase 3 | Mặc định: vẫn dùng Yahoo, đánh dấu `has_price = false`, ghi độ phủ vào catalog, API phát `SurvivorshipWarning`. Năm nào dưới 70% thì alert leader để cân nhắc tìm nguồn bổ sung ở phase 4. Không chặn pipeline |
 | Nguồn đổi format hoặc chặn bot | `SourceFormatChanged`, live smoke test fail | Fixture giữ hành vi cũ; sửa connector; nếu nguồn chết hẳn thì tìm nguồn thay ở [02-architecture.md](02-architecture.md) mục 6 |
 | ALFRED giới hạn request khi backfill vintage | Lỗi 429 dày | Giảm `max_workers`, backfill theo nhiều đêm |
 | Task OOM trên bee | Task bị kill, RAM đỉnh đo ở G0 | Giới hạn kích thước file Parquet theo tháng (đã có), giảm `parallelism` |

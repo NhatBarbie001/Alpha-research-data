@@ -21,6 +21,7 @@ get_bars(symbols_or_ids, start, end, freq="1d", *, as_of, adjusted=True, session
 get_macro(series_keys, start, end, *, as_of) -> DataFrame
 get_fundamentals(symbols_or_ids, concepts, *, as_of) -> DataFrame
 get_universe(universe_code, *, as_of, tradable_only=True) -> list[int]
+get_coverage(universe_code, start, end, *, as_of) -> DataFrame
 get_factors(dataset, start, end, *, as_of) -> DataFrame
 ```
 
@@ -34,6 +35,15 @@ get_factors(dataset, start, end, *, as_of) -> DataFrame
 | `sessions` | Chỉ áp cho minute US |
 
 Resample không tự điền nến trống. Khoảng không có giao dịch thì không có dòng.
+
+### Cảnh báo thiếu giá (survivorship)
+
+Nguồn miễn phí thiếu giá của một số mã đã hủy niêm yết (xem [09-gold/02-universe_daily.md](09-gold/02-universe_daily.md) mục "Độ phủ giá và survivorship"). API không giấu chuyện này:
+
+- `get_universe(..., tradable_only=True)` chỉ trả mã có giá, nên mã thiếu giá bị loại **ngầm**. Khi universe tại `as_of` có mã `has_price = false`, hàm phát `SurvivorshipWarning` (lớp con của `UserWarning`) ghi số mã thiếu và tỷ lệ, ví dụ `SP500 at 2008-09-15: 7/500 members have no price (1.4%)`.
+- `tradable_only=False` trả đủ thành viên, kể cả mã thiếu giá, để agent tự quyết cách xử lý.
+- `get_coverage` trả một dòng cho mỗi năm trong `[start, end]` (bị cắt về `as_of`): `year`, `member_days`, `priced_days`, `coverage`. Kết quả backtest nên kèm con số này.
+- Docstring của `get_universe` và `get_bars` ghi rõ giới hạn này.
 
 ## Truy cập SQL
 
@@ -49,4 +59,5 @@ Resample không tự điền nến trống. Khoảng không có giao dịch thì
 
 - Test chứng minh `get_macro(..., as_of=t)` không bao giờ trả dòng có `available_from > t`.
 - Test chứng minh gọi `get_*` không truyền `as_of` thì lỗi.
+- Test: universe fixture có mã thiếu giá thì `get_universe` phát `SurvivorshipWarning`; `tradable_only=False` trả cả mã đó.
 - `get_bars(["BTCUSDT"], ..., freq="1h")` cho kết quả khớp với tự resample bằng pandas.

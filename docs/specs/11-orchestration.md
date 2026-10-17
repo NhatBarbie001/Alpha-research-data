@@ -67,7 +67,7 @@ Các DAG mặc định **tạm dừng** khi deploy; bật từng DAG trên UI sa
 ## Cảnh báo
 
 - Kênh: Telegram bot (miễn phí). Đổi sang Slack nếu team dùng Slack (chờ leader).
-- Gửi khi: task fail hẳn (hết retry hoặc lỗi không retry), `dq_post_checks` có warn mới, disk dùng quá 85%.
+- Gửi khi: task fail hẳn (hết retry hoặc lỗi không retry), `dq_post_checks` có warn mới, disk dùng quá 85%, độ phủ giá (`price_coverage`) của một universe có năm dưới 70% (gửi kèm leader).
 - Nội dung: DAG, task, partition, lỗi (dòng đầu), link log (qua SSH tunnel).
 
 ## Done when

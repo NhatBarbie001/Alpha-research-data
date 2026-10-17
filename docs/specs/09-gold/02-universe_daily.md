@@ -24,11 +24,39 @@ Ghi bảng `universe_daily`: một dòng cho mỗi (universe, ngày, chứng kho
 
 Mọi đặc trưng dùng để lọc (ví dụ `adv_20d`) chỉ dùng dữ liệu đến `t-1`.
 
-## Báo cáo survivorship
+## Độ phủ giá và survivorship
 
-Job dựng bảng này xuất kèm danh sách `(universe_code, date, security_id)` thuộc universe nhưng `has_price = false`. Tỷ lệ này cho mỗi năm là con số đính kèm mọi kết quả backtest.
+Nguồn miễn phí (Yahoo, Alpaca) thường không còn giá của mã đã hủy niêm yết. Dữ liệu có thì dùng được; vấn đề là **thiếu**. Thiếu như vậy thì mã đó coi như không tồn tại khi backtest, và vì mã hay bị thiếu thường là mã đã phá sản hoặc giảm mạnh, backtest sẽ lạc quan hơn thực tế. Không sửa được chỗ thiếu trong ngân sách 0 USD, nên cách xử lý là **đo, đánh dấu và cảnh báo**, không chặn pipeline.
+
+**Quy tắc lưu:** mã thuộc universe tại `t` luôn có dòng trong bảng, kể cả khi không có giá (`has_price = false`). Không bao giờ bỏ dòng vì thiếu giá.
+
+**Định nghĩa độ phủ** (dùng chung cho check, gate và API):
+
+```
+độ phủ(universe, năm) = số (ngày, security_id) có has_price = true
+                        ─────────────────────────────────────────
+                        số (ngày, security_id) thuộc universe trong năm đó
+```
+
+Kèm theo danh sách mã **không có giá ngày nào** trong suốt thời gian là thành viên.
+
+**Hành động mặc định theo độ phủ của từng năm:**
+
+| Độ phủ | Hành động |
+|---|---|
+| ≥ 90% | Check `price_coverage` qua |
+| 70% – 90% | Check `price_coverage` ở mức `warn`, hiện trong báo cáo DQ. Pipeline chạy bình thường |
+| < 70% | Như trên, thêm alert gửi leader. Pipeline vẫn chạy bình thường |
+
+Ngưỡng khai báo trong code của check, đổi được mà không sửa spec khác.
+
+**Công bố con số:**
+- Check `price_coverage` ghi độ phủ theo năm và danh sách mã thiếu vào `dq_results.detail` (xem [05-quality.md](../05-quality.md)).
+- Job ghi độ phủ tổng và năm thấp nhất vào `table_catalog.notes` của `universe_daily`, để ai xem catalog cũng thấy.
+- `access.get_universe` cảnh báo agent khi universe tại `as_of` có mã thiếu giá; `access.get_coverage` trả độ phủ theo năm (xem [10-access.md](../10-access.md)).
 
 ## Done when
 
-- `SP500` tại 2008-09-01 có Lehman Brothers với `has_price` đúng thực tế dữ liệu.
-- Báo cáo survivorship theo năm từ 2005.
+- `SP500` tại 2008-09-01 có Lehman Brothers, có dòng dù `has_price` là true hay false.
+- Check `price_coverage` chạy sau mỗi lần dựng bảng, có độ phủ theo năm từ 2005.
+- Test: lake fixture có một mã thuộc universe nhưng không có bar nào thì mã đó vẫn có dòng với `has_price = false`, độ phủ giảm đúng tỷ lệ.
