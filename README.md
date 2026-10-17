@@ -28,6 +28,21 @@ Crawl dữ liệu thị trường và macro từ nguồn miễn phí → lưu b�
 
 Thứ tự spec theo hướng phụ thuộc: module được module khác dùng thì đứng trước. Nếu chỉ cần viết một connector mới: đọc ba tài liệu đầu, rồi [docs/specs/07-ingestion/01-pipeline.md](docs/specs/07-ingestion/01-pipeline.md) và một spec nguồn mẫu như [docs/specs/07-ingestion/02-sources/01-binance.md](docs/specs/07-ingestion/02-sources/01-binance.md).
 
+## Phát triển
+
+Cần [uv](https://docs.astral.sh/uv/) và Python ≥ 3.12.
+
+```bash
+uv sync                      # tạo .venv, cài package + công cụ dev
+cp .env.example .env         # điền API key; không commit .env
+uv run pytest                # test (bỏ qua test gọi mạng thật)
+uv run pytest -m live        # chỉ test gọi nguồn thật
+uv run ruff check && uv run ruff format --check
+uv run mypy
+```
+
+CI (`.github/workflows/ci.yml`) chạy các bước trên cùng quét secret bằng gitleaks cho mọi PR và mọi push lên `main`. Mỗi task trong [docs/05-implementation-plan.md](docs/05-implementation-plan.md) là một PR, nhánh đặt tên theo ID task (ví dụ `p0-02-core`).
+
 ## Quy ước
 
 - Thêm module mới thì viết spec trước, đặt trong `docs/specs/` theo đúng vị trí của module trong `src/alphadata/`, tên file `NN-<tên module>.md`.
