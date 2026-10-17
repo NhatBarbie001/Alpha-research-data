@@ -287,8 +287,10 @@ Thư viện offline (không crawl): `exchange_calendars` cho lịch sàn, xem [s
 
 | Phase | Nội dung | Kết quả cần có |
 |---|---|---|
-| 0. Nền | `core`, `storage`, `schemas`, `metadata`, `quality`, `universe`, `ingestion.pipeline`, `cli`, `deploy` | `alphadata run` chạy được với một dataset giả; Docker stack lên được trên server bee |
+| 0. Nền + lát cắt Binance | `core`, `storage`, `schemas`, `metadata`, `quality`, `universe`, `ingestion.pipeline`, `cli`, `deploy`, `orchestration` ở mức đủ cho một nguồn thật (`binance_spot_klines_1m`) | Binance klines 1m chạy hằng ngày trên server bee, có backfill, có alert |
 | 1. Giá + macro chính | Nguồn P1: binance, alpaca, yahoo, fred. `orchestration` cho cả 4 | Các DAG hằng ngày chạy ổn định 1 tuần; backfill pilot xong |
 | 2. Reference | Nguồn P2 và `reference.*` | Có `security_id`, lịch sàn, thành phần S&P 500 theo ngày, corporate actions đã đối chiếu |
 | 3. Gold + access | `gold.*`, `access` | Agent gọi được `get_bars`, `get_macro` với `as_of`; có test PIT |
 | 4. Mở rộng macro | Nguồn P3, P4 | Theo nhu cầu của agent |
+
+Danh sách task, ước lượng và điều kiện qua từng phase ở [05-implementation-plan.md](05-implementation-plan.md).

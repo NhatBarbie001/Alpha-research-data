@@ -10,7 +10,8 @@ Crawl dữ liệu thị trường và macro từ nguồn miễn phí → lưu b�
 | 2 | [docs/02-architecture.md](docs/02-architecture.md) | Có những tầng và module nào, đặt ở đâu, dùng nguồn dữ liệu nào |
 | 3 | [docs/03-how-it-works.md](docs/03-how-it-works.md) | Các module gọi nhau thế nào khi chạy, dữ liệu đi đâu, lỗi xử lý ra sao |
 | 4 | [docs/04-data-model.md](docs/04-data-model.md) | Thiết kế database: mọi bảng, cột, kiểu, khoá, quan hệ, lưu trữ vật lý, phân quyền |
-| 5 | [docs/specs/](docs/specs/) | Chi tiết từng module, đọc theo số thứ tự bên dưới |
+| 5 | [docs/05-implementation-plan.md](docs/05-implementation-plan.md) | Làm theo thứ tự nào, chia task ra sao, mỗi phase phải đạt gì mới được sang phase sau |
+| 6 | [docs/specs/](docs/specs/) | Chi tiết từng module, đọc theo số thứ tự bên dưới |
 
 ### Spec
 
