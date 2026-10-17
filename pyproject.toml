@@ -4,14 +4,21 @@ version = "0.1.0"
 description = "Tầng data cho Alpha research agent: crawl, chuẩn hoá, point-in-time"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pandas>=3.0.6",
+    "python-dotenv>=1.2.4",
+    "requests>=2.34.2",
+]
 
 [dependency-groups]
 dev = [
     "mypy>=1.13",
+    "pandas-stubs>=3.0.5.260914",
     "pytest>=8.3",
     "pytest-cov>=6.0",
+    "responses>=0.26.3",
     "ruff>=0.8",
+    "types-requests>=2.33.0.20261006",
 ]
 
 [build-system]
@@ -37,7 +44,7 @@ strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["-ra", "--strict-markers", "-m", "not live"]
+addopts = ["-ra", "--strict-markers", "--import-mode=importlib", "-m", "not live"]
 markers = [
     "live: gọi nguồn thật qua mạng; không chạy trong CI (chạy tay: pytest -m live)",
 ]
