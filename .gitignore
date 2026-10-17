@@ -1,0 +1,37 @@
+# Secret: không bao giờ commit
+.env
+.env.*
+!.env.example
+
+# Data: không bao giờ commit (lake, metadata SQLite, file tạm)
+data/
+*.parquet
+*.duckdb
+*.duckdb.wal
+meta.db
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Công cụ
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Airflow, log
+logs/
+
+# Editor, OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

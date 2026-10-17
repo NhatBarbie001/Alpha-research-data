@@ -1,0 +1,51 @@
+[project]
+name = "alphadata"
+version = "0.1.0"
+description = "Tầng data cho Alpha research agent: crawl, chuẩn hoá, point-in-time"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.28,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+extend-exclude = ["docs"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src", "tests"]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "-m", "not live"]
+markers = [
+    "live: gọi nguồn thật qua mạng; không chạy trong CI (chạy tay: pytest -m live)",
+]
+
+[tool.coverage.run]
+source = ["alphadata"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

@@ -1,0 +1,5 @@
+# Code chạy trong container Linux: giữ LF dù commit từ Windows
+* text=auto eol=lf
+*.parquet binary
+*.zip binary
+*.gz binary
