@@ -120,7 +120,7 @@ alphadata/                              (repo root)
 ├── src/alphadata/
 │   ├── core/                           settings.py, http.py, errors.py, timeutil.py
 │   ├── storage/                        layout.py, raw.py, parquet.py, disk.py
-│   ├── schemas/                        silver.py, gold.py
+│   ├── schemas/                        types.py, conform.py, silver.py, reference.py, gold.py
 │   ├── metadata/                       tables.py, store.py, checkpoint.py
 │   ├── quality/                        checks.py, runner.py, post_checks.py
 │   ├── universe/                       loader.py
