@@ -63,6 +63,7 @@ class HttpResponse:
 | `SourceFormatChanged` | Format trả về khác mong đợi (thiếu cột, JSON khác cấu trúc) | Fail, alert |
 | `DiskFullError` | Disk dưới ngưỡng | Fail, alert, không retry |
 | `DataQualityError` | Check mức `error` không qua | Fail, alert |
+| `SchemaMismatch` | DataFrame không khớp hợp đồng bảng (thiếu/thừa cột, sai kiểu, null ở cột không null). Raise bởi `schemas.conform` và `storage.write_parquet_atomic` | Fail, alert (lỗi code hoặc nguồn đổi format) |
 | `HttpStatusError` | HTTP trả mã lỗi không retry được (khác 404), hoặc hết lượt retry | Theo cấu hình retry của DAG |
 | `HttpRequestError` | Lỗi mạng sau khi hết lượt retry | Theo cấu hình retry của DAG |
 

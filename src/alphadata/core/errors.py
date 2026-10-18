@@ -22,6 +22,10 @@ class DataQualityError(AlphadataError):
     """Check mức error không qua. Fail và alert."""
 
 
+class SchemaMismatch(AlphadataError):
+    """DataFrame không khớp hợp đồng bảng: thiếu/thừa cột, sai kiểu, null ở cột không null."""
+
+
 class HttpStatusError(AlphadataError):
     """HTTP trả mã lỗi không retry được, hoặc hết lượt retry. `url` đã che key."""
 
