@@ -39,7 +39,7 @@ class Dataset(ABC):
     @abstractmethod
     def silver_path(self, partition: dict) -> Path: ...
 
-    def checks(self, df, partition) -> list[CheckResult]: ...   # mặc định: not_empty, no_null_keys, unique_keys, schema_match
+    def checks(self, partition) -> list[Check]: ...   # mặc định: quality.default_checks(schema)
     def merge(self, existing, new) -> pd.DataFrame: ...          # mặc định: storage.upsert theo khoá của schema
     def backfill_partitions(self, member, start, end) -> list[dict]: ...  # chia lịch sử thành các partition
 ```
@@ -71,7 +71,7 @@ Các bước:
 3. `meta.start_run`.
 4. `fetch` → `meta.record_raw`.
 5. `normalize`, thêm `source` và `ingested_at`.
-6. `checks` → `meta.record_dq`. Có lỗi `error` thì raise `DataQualityError`.
+6. `quality.run_checks(df, dataset.checks(partition), table_name=..., meta=meta, run_id=...)`: ghi `dq_results`, có check `error` fail thì raise `DataQualityError` (chưa ghi silver).
 7. Đọc file silver hiện có, `merge`, `storage.write_parquet_atomic`.
 8. `meta.upsert_catalog`.
 9. Nếu `keep_raw = False`: xoá file raw, `meta.mark_raw_deleted`.
