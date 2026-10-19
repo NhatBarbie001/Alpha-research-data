@@ -5,15 +5,21 @@ description = "Tầng data cho Alpha research agent: crawl, chuẩn hoá, point-
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "click>=8.1",
+    "duckdb>=1.1",
     "filelock>=3.16",
     "pandas>=3.0.6",
     "psycopg[binary]>=3.2",
     "pyarrow>=26.0.0",
     "python-dotenv>=1.2.4",
+    "pytz>=2024.1",
     "pyyaml>=6.0",
     "requests>=2.34.2",
     "sqlalchemy>=2.0",
 ]
+
+[project.scripts]
+alphadata = "alphadata.cli.main:main"
 
 [dependency-groups]
 dev = [

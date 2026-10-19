@@ -7,7 +7,9 @@
 
 Chạy mọi việc của pipeline mà không cần Airflow: chạy một partition, backfill, xem catalog, lịch sử chạy, kết quả DQ, query nhanh. Dùng khi phát triển, debug, và backfill lần đầu trên server.
 
-Entrypoint: `alphadata` (khai báo trong `pyproject.toml`) và `python -m alphadata`.
+Entrypoint: `alphadata` (khai báo trong `pyproject.toml`) và `python -m alphadata`. Viết bằng `click`; test bằng `click.testing.CliRunner`.
+
+**Tiến độ:** `run`, `reprocess`, `run-universe`, `datasets`, `universes`, `runs`, `catalog`, `disk`, `query` có từ P0-10. `backfill` thêm ở P0-13, `dq` ở P1-07, `build` ở P2/P3.
 
 ## Lệnh
 
@@ -30,7 +32,12 @@ Entrypoint: `alphadata` (khai báo trong `pyproject.toml`) và `python -m alphad
 ## Quy ước
 
 - Exit code: 0 thành công, 1 lỗi, 2 sai tham số, 3 `NotAvailableYet` (để script bên ngoài biết mà thử lại).
-- Log ra stderr, kết quả ra stdout.
+  - **2 (sai tham số)**: token không phải `key=value`, khoá lặp lại, dataset hoặc universe không tồn tại, partition sai khoá hoặc bị `dataset.validate` từ chối, option sai. Kiểm trước khi gọi pipeline, nên không tạo run nào.
+  - **1 (lỗi)**: lỗi trong lúc chạy (pipeline, DQ, checksum, raw không còn, SQL sai, file universe hỏng, disk dưới ngưỡng ở lệnh `disk`).
+  - Message lỗi in ra stderr dạng `error: <Loại lỗi>: <message>`, đã che key. `-v/--verbose` in thêm traceback (cũng đã che key) và log mức DEBUG.
+- `run-universe`: chạy từng member, member lỗi không dừng member khác, cuối cùng in bảng `member, status, rows_in, rows_out, error`. Exit 0 nếu tất cả thành công; 3 nếu mọi member không thành công đều là `NotAvailableYet` (cron thử lại sau); còn lại 1. Chỉ chạy member hoạt động vào ngày `--on`, hoặc ngày lấy từ `period`/`date` nếu đó là một ngày `YYYY-MM-DD`.
+- `query`: DuckDB trong bộ nhớ qua `access.views.connect` (view cho mọi bảng đã có file, timezone UTC), in tối đa `--limit` dòng (mặc định 100). SQL sai thì in danh sách view có sẵn.
+- Log ra stderr, kết quả ra stdout (bảng chữ căn cột). Stdout/stderr được chuyển sang UTF-8 khi chạy, vì console Windows mặc định không in được tiếng Việt.
 - Không hỏi tương tác (chạy được trong cron, nohup).
 - `trigger = "cli"` hoặc `"backfill"` khi ghi `ingestion_runs`.
 
