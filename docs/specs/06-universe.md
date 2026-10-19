@@ -11,12 +11,12 @@ Phân biệt với [09-gold/02-universe_daily.md](09-gold/02-universe_daily.md):
 
 ## Định dạng
 
-Mỗi file YAML là một nhóm:
+Mỗi file YAML là một nhóm, tên file trùng `name`:
 
 ```yaml
 # config/universe/crypto_pilot.yaml
 name: crypto_pilot
-dataset: binance_spot_klines_1m
+datasets: [binance_spot_klines_1m]
 key: symbol
 start: 2024-01-01
 members:
@@ -27,26 +27,54 @@ members:
 ```yaml
 # config/universe/fred_core.yaml
 name: fred_core
-dataset: fred_series
+datasets: [fred_series]
 key: series_id
 members:
   - {id: DGS10, note: "Lợi suất trái phiếu Mỹ 10 năm, %, daily"}
   - {id: CPIAUCSL, note: "CPI, đã điều chỉnh mùa vụ, monthly"}
 ```
 
-`members` nhận chuỗi hoặc object có `id`. Trường tuỳ chọn mỗi member: `start`, `end`, `note`.
+| Trường | Bắt buộc | Ý nghĩa |
+|---|---|---|
+| `name` | ✓ | `snake_case`, trùng tên file |
+| `datasets` | ✓ | Danh sách dataset dùng universe này (một universe có thể phục vụ nhiều dataset, ví dụ `us_etf_core` cho Alpaca 1m, Alpaca 1d, Yahoo) |
+| `key` | ✓ | Khoá partition mà member điền vào, ví dụ `symbol`, `series_id` |
+| `members` | ✓ | Chuỗi, hoặc object có `id` và tuỳ chọn `start`, `end`, `note` |
+| `start` | | Ngày sớm nhất cần backfill |
+| `note` | | Ghi chú |
+
+`start`, `end` của member: cả hai đầu đều tính (quy ước của data model). Dùng cho cặp mới niêm yết hoặc mã đã hủy niêm yết.
+
+**Mã phải là chuỗi.** YAML tự đổi `ON` thành `True`, `0700` thành số, `2024-01-01` thành ngày. Loader báo lỗi thay vì crawl sai mã; viết trong ngoặc kép: `"ON"`.
 
 ## API
 
 ```python
-load(name) -> Universe            # Universe(name, dataset, key, start, members: list[Member])
-list_universes() -> list[str]
-partitions(name, **extra) -> list[dict]   # ví dụ [{"symbol": "BTCUSDT", "date": "2026-10-14"}, ...]
+load(name, directory=None) -> Universe
+list_universes(directory=None) -> list[str]
+partitions(name, extra=None, *, on=None, directory=None) -> list[dict[str, str]]
+
+@dataclass(frozen=True)
+class Universe:
+    name: str
+    datasets: tuple[str, ...]
+    key: str
+    members: tuple[Member, ...]     # Member(id, start, end, note)
+    start: date | None
+    def member_ids(self, on=None) -> list[str]
+    def partitions(self, extra=None, *, on=None) -> list[dict[str, str]]
 ```
 
-Lỗi khi: file thiếu trường bắt buộc, `dataset` không có trong registry, member trùng.
+- `directory` mặc định là `settings.universe_dir` (`ALPHADATA_UNIVERSE_DIR`, mặc định `./config/universe`).
+- `partitions(extra={"period": "2026-10-14"}, on=date(2026, 10, 14))` → `[{"symbol": "BTCUSDT", "period": "2026-10-14"}, ...]`. Có `on` thì bỏ member không hoạt động vào ngày đó. `extra` chứa chính `key` thì `ValueError`.
+
+**Lỗi** (`InvalidUniverse`, message bắt đầu bằng tên file): không phải mapping; thiếu trường bắt buộc; **trường lạ** (bắt lỗi gõ sai như `member:`); `name` sai hoặc khác tên file; `datasets` rỗng, trùng hoặc không phải `snake_case`; `members` rỗng; member trùng, `id` rỗng hoặc có khoảng trắng hai đầu, `id` bị YAML đổi kiểu; ngày sai; `start > end`; YAML hỏng. Tên universe không phải `snake_case` (ví dụ `../x`) thì `ValueError`; không có file thì `KeyError` kèm danh sách universe có sẵn.
+
+**Kiểm với registry nằm ở test, không ở loader.** `universe` đứng trước `ingestion` trong hướng phụ thuộc nên không import registry. `tests/universe/test_repo_universes.py` đối chiếu mọi file trong `config/universe/`: dataset có trong registry, `key` thuộc `partition_keys` của dataset, mọi member qua `dataset.validate`. File sai thì CI fail. Người dùng universe (CLI, backfill) kiểm dataset được chọn có trong `datasets`.
 
 ## Universe pilot (đề xuất, chờ leader duyệt)
+
+Có trong repo: `crypto_pilot.yaml` (P0-08). `crypto_futures_pilot.yaml` thêm ở P1-01; `us_etf_core`, `us_stock_pilot`, `us_index`, `fred_core`, `fred_wide` ở P1-05; `sp500_daily` ở P2-06.
 
 | File | Dataset | Thành viên | Từ |
 |---|---|---|---|
@@ -63,5 +91,5 @@ Lỗi khi: file thiếu trường bắt buộc, `dataset` không có trong regis
 
 ## Done when
 
-- Mọi file YAML pilot có trong repo và load được.
+- File YAML pilot của mỗi task có trong repo khi task xong, load được và qua test đối chiếu registry.
 - Test lỗi với file thiếu trường, member trùng.

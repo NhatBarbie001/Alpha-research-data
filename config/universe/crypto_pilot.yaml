@@ -1,0 +1,17 @@
+# Pilot crypto: top 10 cặp USDT theo volume (đề xuất trong docs/specs/06-universe.md, chờ leader duyệt).
+name: crypto_pilot
+datasets:
+  - binance_spot_klines_1m
+key: symbol
+start: 2024-01-01
+members:
+  - BTCUSDT
+  - ETHUSDT
+  - SOLUSDT
+  - BNBUSDT
+  - XRPUSDT
+  - DOGEUSDT
+  - ADAUSDT
+  - TRXUSDT
+  - LINKUSDT
+  - AVAXUSDT

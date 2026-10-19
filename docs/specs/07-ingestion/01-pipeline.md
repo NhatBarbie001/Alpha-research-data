@@ -124,7 +124,8 @@ Raise `RawUnavailable` khi: chưa có lần chạy thành công; raw đã bị x
 run_backfill(dataset_name, universe_name, start, end, *, backfill_id=None, max_workers=1)
 ```
 
-- `plan_backfill` gọi `dataset.backfill_partitions` cho từng member, ghi danh sách vào `backfill_checkpoints` với status `pending`.
+- Dataset phải có trong `universe.datasets`, nếu không thì `ValueError`.
+- `plan_backfill` gọi `dataset.backfill_partitions` cho từng member (dùng `start`/`end` của member và universe), ghi danh sách vào `backfill_checkpoints` với status `pending`.
 - Chạy lần lượt (hoặc `max_workers` luồng nếu nguồn cho phép), đánh dấu `done` / `failed` sau từng partition.
 - Truyền lại `backfill_id` cũ thì chỉ chạy các partition chưa `done`. Đây là cơ chế resume khi crash.
 - Gọi `check_disk` trước mỗi partition. Hết disk thì dừng, không đánh dấu `failed`.

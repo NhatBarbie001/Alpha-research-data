@@ -15,7 +15,7 @@ Entrypoint: `alphadata` (khai báo trong `pyproject.toml`) và `python -m alphad
 |---|---|---|
 | `run <dataset> k=v ...` | `alphadata run binance_spot_klines_1m symbol=BTCUSDT period=2026-10-11` | `ingestion.pipeline.run_partition` |
 | `reprocess <dataset> k=v ...` | `alphadata reprocess fred_series series_id=CPIAUCSL` | `ingestion.pipeline.reprocess_partition`: chạy lại từ raw đã lưu, không gọi mạng |
-| `run-universe <universe> [k=v]` | `alphadata run-universe crypto_pilot period=2026-10-11` | `run_partition` cho từng member |
+| `run-universe <universe> [--dataset D] [k=v]` | `alphadata run-universe crypto_pilot period=2026-10-11` | `run_partition` cho từng member đang hoạt động; universe có nhiều dataset thì bắt buộc `--dataset` |
 | `backfill <dataset> <universe> --start --end [--resume ID]` | `alphadata backfill alpaca_bars_1m us_etf_core --start 2024-01 --end 2026-09` | `ingestion.pipeline.run_backfill` |
 | `datasets` | | Liệt kê dataset đã đăng ký, nguồn, bảng, secret cần có |
 | `universes` | | Liệt kê universe và số member |
