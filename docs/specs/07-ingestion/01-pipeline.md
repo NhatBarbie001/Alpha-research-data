@@ -13,7 +13,7 @@ Khung chung để chạy mọi nguồn: hợp đồng `Dataset` mà mỗi connec
 |---|---|
 | `dataset.py` | `Dataset` (abstract), `FetchContext`, kiểu `Partition` |
 | `run.py` | `run_partition()`, `reprocess_partition()`, `RunResult`, `RawUnavailable` |
-| `backfill.py` | `plan_backfill()`, `run_backfill()` (P0-13) |
+| `backfill.py` | `plan_partitions()`, `plan_backfill()`, `run_backfill()`, `BackfillResult` |
 | `registry.py` | `register()`, `get_dataset(name)`, `list_datasets()` |
 
 ## Hợp đồng `Dataset`
@@ -47,7 +47,7 @@ class Dataset(ABC):
     def checks(self, partition) -> list[Check]: ...           # mặc định: quality.default_checks(schema)
     def merge(self, existing, new) -> pd.DataFrame: ...       # mặc định: storage.upsert theo khoá của schema
     def read(self, raw: RawFile) -> bytes: ...                # storage.read_raw: đọc có kiểm checksum
-    def backfill_partitions(self, member, start, end) -> list[dict]: ...  # thêm ở P0-13
+    def backfill_partitions(self, member, start, end) -> list[Partition]: ...  # mặc định NotImplementedError
 ```
 
 **Connector không quyết định đường dẫn silver.** Pipeline chia dữ liệu theo partition của bảng (`schemas.split_partitions`) và lấy đường dẫn từ `storage.layout.table_file`. Một partition chạy có thể ghi nhiều file, ví dụ dữ liệu vắt qua hai tháng.
@@ -121,15 +121,44 @@ Raise `RawUnavailable` khi: chưa có lần chạy thành công; raw đã bị x
 ## Backfill
 
 ```python
-run_backfill(dataset_name, universe_name, start, end, *, backfill_id=None, max_workers=1)
+run_backfill(dataset, universe=None, start=None, end=None, *, backfill_id=None, max_workers=1,
+             settings=None, meta=None, on_planned=None) -> BackfillResult
+plan_backfill(dataset, universe, start=None, end=None, *, meta, settings=None) -> (backfill_id, số partition)
+plan_partitions(dataset, universe, start=None, end=None) -> list[Partition]
 ```
 
+**Lập kế hoạch** (backfill mới, cần `universe`):
 - Dataset phải có trong `universe.datasets`, nếu không thì `ValueError`.
-- `plan_backfill` gọi `dataset.backfill_partitions` cho từng member (dùng `start`/`end` của member và universe), ghi danh sách vào `backfill_checkpoints` với status `pending`.
-- Chạy lần lượt (hoặc `max_workers` luồng nếu nguồn cho phép), đánh dấu `done` / `failed` sau từng partition.
-- Truyền lại `backfill_id` cũ thì chỉ chạy các partition chưa `done`. Đây là cơ chế resume khi crash.
-- Gọi `check_disk` trước mỗi partition. Hết disk thì dừng, không đánh dấu `failed`.
-- Nguồn có file tháng (Binance) thì backfill theo tháng, không theo ngày.
+- `start` mặc định là `start` của universe (không có thì `ValueError`); `end` mặc định và tối đa là **hôm qua (UTC)**.
+- Với mỗi member: khoảng = [max(start, member.start), min(end, member.end)], cả hai đầu tính; khoảng rỗng thì bỏ qua. Gọi `dataset.backfill_partitions(member_id, start, end)`, chạy `validate_partition` cho từng partition, bỏ trùng.
+- Ghi tất cả vào `backfill_checkpoints` với status `pending`, sinh `backfill_id` mới.
+- Dataset không override `backfill_partitions` thì `NotImplementedError`.
+
+**Chạy:**
+- Chỉ chạy partition chưa `done` (`pending` hoặc `failed`), mỗi partition qua `run_partition(..., trigger="backfill", backfill_id=...)`.
+- Thành công → `done`. `NotAvailableYet` hoặc lỗi khác → `failed` kèm message (đã che key), chạy tiếp partition sau.
+- Checkpoint `done` chỉ được ghi **sau khi** silver đã ghi xong. Bị kill trước đó thì partition còn `pending` và chạy lại ở lần resume; merge theo khoá nên không trùng dòng.
+- `KeyboardInterrupt` (Ctrl-C, bị kill) lan ra ngoài, không đánh dấu `failed`.
+- `run_partition` gọi `check_disk` trước mỗi partition. `DiskFullError` thì **dừng hẳn**, `stopped="disk_full"`, partition còn `pending`.
+- `max_workers=1` chạy tuần tự trong luồng chính; lớn hơn thì dùng thread pool (lock theo file chống mất dữ liệu; hết disk thì các partition chưa chạy bị huỷ).
+- `on_planned(backfill_id, số partition sẽ chạy)` được gọi trước khi chạy, để CLI in `backfill_id` phòng khi bị kill.
+
+**Resume:** truyền `backfill_id` cũ: không lập lại kế hoạch, chỉ chạy partition chưa `done`. `backfill_id` không tồn tại hoặc thuộc dataset khác thì `ValueError`.
+
+```python
+@dataclass(frozen=True)
+class BackfillResult:
+    backfill_id: UUID
+    dataset: str
+    attempted: int; succeeded: int; failed: int; not_available: int   # của lần chạy này
+    stopped: str | None             # "disk_full"
+    summary: dict[str, int]         # đếm theo status của toàn bộ backfill
+    remaining -> int                # pending + failed
+```
+
+**Giới hạn đã biết:** bị kill cứng (`kill -9`, mất điện) giữa lúc một partition đang chạy thì dòng `ingestion_runs` của partition đó còn `running` mãi. Dữ liệu không sai (silver ghi atomic, checkpoint vẫn `pending` nên resume chạy lại), nhưng báo cáo runs sẽ thấy dòng treo. Dọn các run `running` quá lâu được để cho job vận hành ở P1-09.
+
+Nguồn có file tháng (Binance) thì backfill theo tháng cho các tháng trọn vẹn đã được đăng, phần còn lại theo ngày (xem spec nguồn).
 
 ## Registry
 

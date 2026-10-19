@@ -180,8 +180,7 @@ alphadata/                              (repo root)
 /data/alphadata/
 ├── raw/<source>/<dataset>/<k=v>/.../<fetch_date>/<file> + <file>.manifest.json
 ├── silver/<table>/<k=v>/.../part.parquet
-├── gold/<table>/<k=v>/.../part.parquet
-└── checkpoints/<dataset>/<backfill_id>.json
+└── gold/<table>/<k=v>/.../part.parquet
 Postgres: DB `airflow` (của Airflow) và DB `alphadata_meta` (metadata của pipeline)
 ```
 

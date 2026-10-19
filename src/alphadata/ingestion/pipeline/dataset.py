@@ -82,6 +82,14 @@ class Dataset(ABC):
     def merge(self, existing: pd.DataFrame | None, new: pd.DataFrame) -> pd.DataFrame:
         return upsert(existing, new, self.schema.key)
 
+    def backfill_partitions(self, member: str, start: date, end: date) -> list[Partition]:
+        """Chia lịch sử [start, end] (cả hai đầu tính) của một member thành các partition.
+
+        Pipeline đã cắt khoảng theo member và hôm qua (UTC). Nguồn có file tháng nên trả partition
+        tháng cho các tháng trọn vẹn đã được đăng.
+        """
+        raise NotImplementedError(f"{self.name} does not support backfill")
+
     def read(self, raw: RawFile) -> bytes:
         """Đọc raw có kiểm checksum với manifest."""
         return read_raw(raw.path)

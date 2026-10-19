@@ -19,6 +19,7 @@ def test_help_lists_commands(invoke: Invoke) -> None:
         "run",
         "reprocess",
         "run-universe",
+        "backfill",
         "datasets",
         "universes",
         "runs",
@@ -245,3 +246,72 @@ def test_query(invoke: Invoke, serve_day: Callable[..., None]) -> None:
     bad = invoke("query", "SELECT * FROM no_such_table")
     assert bad.exit_code == 1
     assert "available views: ['crypto_bars_1m']" in bad.stderr
+
+
+# --- backfill ----------------------------------------------------------------------
+
+
+def backfill_id_from(result: Result) -> str:
+    line = next(x for x in result.stderr.splitlines() if x.startswith("backfill_id="))
+    return line.split()[0].split("=", 1)[1]
+
+
+def test_backfill_then_resume(
+    invoke: Invoke, serve_day: Callable[..., None], write_universe: Callable[[str, str], Path]
+) -> None:
+    write_universe("pilot", PILOT)
+    serve_day("BTCUSDT", DAY)
+    serve_day("ETHUSDT", DAY, status=404)
+    first = invoke("backfill", "binance_spot_klines_1m", "pilot", "--start", DAY, "--end", DAY)
+    assert first.exit_code == 3, first.stdout + first.stderr  # chỉ thiếu file chưa đăng
+    assert "partitions_to_run=2" in first.stderr
+    assert "done=1 failed=1 pending=0" in first.stdout
+    bid = backfill_id_from(first)
+    assert f"--resume {bid}" in first.stderr
+
+    serve_day("ETHUSDT", DAY)
+    second = invoke("backfill", "binance_spot_klines_1m", "--resume", bid)
+    assert second.exit_code == 0, second.stdout + second.stderr
+    assert "partitions_to_run=1" in second.stderr
+    assert "done=2 failed=0 pending=0" in second.stdout
+
+
+def test_backfill_month_bounds_and_failure_exit_1(
+    invoke: Invoke, serve_day: Callable[..., None], write_universe: Callable[[str, str], Path]
+) -> None:
+    write_universe("pilot", PILOT.replace("  - ETHUSDT\n", ""))
+    serve_day("BTCUSDT", DAY, bad_checksum=True)
+    result = invoke("backfill", "binance_spot_klines_1m", "pilot", "--start", DAY, "--end", DAY)
+    assert result.exit_code == 1
+    assert "1 failed" in result.stdout
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["backfill", "binance_spot_klines_1m"],
+        ["backfill", "binance_spot_klines_1m", "pilot", "--resume", str("0" * 32)],
+        ["backfill", "binance_spot_klines_1m", "--resume", "not-a-uuid"],
+        ["backfill", "binance_spot_klines_1m", "--resume", "00000000-0000-0000-0000-000000000000"],
+        ["backfill", "binance_spot_klines_1m", "missing_universe", "--start", DAY],
+        ["backfill", "binance_spot_klines_1m", "pilot", "--start", "2025-13"],
+        ["backfill", "binance_spot_klines_1m", "pilot", "--start", "2025-02", "--end", "2025-01"],
+        ["backfill", "no_such_dataset", "pilot"],
+    ],
+    ids=[
+        "no-universe",
+        "resume-with-universe",
+        "bad-uuid",
+        "unknown-id",
+        "unknown-universe",
+        "bad-month",
+        "empty-range",
+        "unknown-dataset",
+    ],
+)
+def test_backfill_bad_arguments(
+    invoke: Invoke, write_universe: Callable[[str, str], Path], args: list[str]
+) -> None:
+    write_universe("pilot", PILOT)
+    result = invoke(*args)
+    assert result.exit_code == 2, result.stdout + result.stderr

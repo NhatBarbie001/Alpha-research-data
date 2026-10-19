@@ -52,7 +52,7 @@ Kiểm tra lại tên cột của funding và metrics khi viết connector, vì 
 
 - `validate` chạy trước khi ghi run: `symbol` phải khớp `^[A-Z0-9]{5,20}$` (đi thẳng vào URL), `period` phải là ngày hoặc tháng hợp lệ.
 - File zip hoặc file `.CHECKSUM` chưa có (404) → `NotAvailableYet`.
-- Backfill dùng file tháng. Tháng hiện tại chưa có file tháng thì dùng file ngày.
+- Backfill (`backfill_partitions`): tháng nằm trọn trong khoảng **và** đã qua ít nhất 5 ngày kể từ đầu tháng sau (`MONTHLY_PUBLISH_DELAY_DAYS`, để chắc file tháng đã đăng) → partition `YYYY-MM`; ngày lẻ ở hai đầu khoảng, tháng hiện tại và tháng vừa hết → partition ngày. Đã chạy thật 2026-10-19: 2024-01-30..2024-03-02 ra 5 partition mỗi cặp (2 ngày, tháng 2, 2 ngày), 47 520 nến; 2024-01..2024-06 bị kill cứng sau 4 partition, resume chạy đúng 8 partition còn lại, 262 080 nến mỗi cặp, không trùng.
 - Silver `crypto_bars_1m` một file mỗi `symbol/year/month`. Run hằng ngày merge ngày mới vào file tháng.
 - Cặp đã bị hủy niêm yết vẫn còn file lịch sử trên data.binance.vision, tải được bình thường.
 

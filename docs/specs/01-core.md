@@ -28,7 +28,7 @@ Gom những thứ mọi module đều cần: cấu hình, HTTP client, các lỗ
 | `user_agent` | `ALPHADATA_USER_AGENT` | `alphadata/<version> (internal research)` | SEC bắt buộc có email liên hệ: trên server phải đặt, ví dụ `alphadata/0.1 (internal research; ops@company.com)` |
 | API key | `FRED_API_KEY`, `ALPACA_KEY_ID`, `ALPACA_SECRET_KEY`, `EIA_API_KEY`, `BEA_API_KEY`, `BLS_API_KEY` | trống | Đọc qua `settings.secret(name)`, báo `MissingCredential` nếu trống. Tên không thuộc danh sách thì `ValueError` |
 
-Thuộc tính suy ra: `raw_dir`, `silver_dir`, `gold_dir`, `checkpoint_dir` (đều nằm dưới `data_root`).
+Thuộc tính suy ra: `raw_dir`, `silver_dir`, `gold_dir` (đều nằm dưới `data_root`). Checkpoint backfill nằm trong bảng `backfill_checkpoints` của metadata, không phải file.
 
 Quy tắc đọc: biến môi trường thật ưu tiên hơn `.env`; giá trị rỗng hoặc toàn khoảng trắng coi như không đặt (để `.env.example` có thể để trống); số không hợp lệ hoặc ≤ 0 thì `ValueError` ghi rõ tên biến. Giá trị key không xuất hiện trong `repr(settings)`.
 

@@ -9,7 +9,7 @@ Chạy mọi việc của pipeline mà không cần Airflow: chạy một partit
 
 Entrypoint: `alphadata` (khai báo trong `pyproject.toml`) và `python -m alphadata`. Viết bằng `click`; test bằng `click.testing.CliRunner`.
 
-**Tiến độ:** `run`, `reprocess`, `run-universe`, `datasets`, `universes`, `runs`, `catalog`, `disk`, `query` có từ P0-10. `backfill` thêm ở P0-13, `dq` ở P1-07, `build` ở P2/P3.
+**Tiến độ:** `run`, `reprocess`, `run-universe`, `datasets`, `universes`, `runs`, `catalog`, `disk`, `query` có từ P0-10, `backfill` từ P0-13; `dq` ở P1-07, `build` ở P2/P3.
 
 ## Lệnh
 
@@ -18,7 +18,7 @@ Entrypoint: `alphadata` (khai báo trong `pyproject.toml`) và `python -m alphad
 | `run <dataset> k=v ...` | `alphadata run binance_spot_klines_1m symbol=BTCUSDT period=2026-10-11` | `ingestion.pipeline.run_partition` |
 | `reprocess <dataset> k=v ...` | `alphadata reprocess fred_series series_id=CPIAUCSL` | `ingestion.pipeline.reprocess_partition`: chạy lại từ raw đã lưu, không gọi mạng |
 | `run-universe <universe> [--dataset D] [k=v]` | `alphadata run-universe crypto_pilot period=2026-10-11` | `run_partition` cho từng member đang hoạt động; universe có nhiều dataset thì bắt buộc `--dataset` |
-| `backfill <dataset> <universe> --start --end [--resume ID]` | `alphadata backfill alpaca_bars_1m us_etf_core --start 2024-01 --end 2026-09` | `ingestion.pipeline.run_backfill` |
+| `backfill <dataset> [<universe>] [--start] [--end] [--resume ID] [--workers N]` | `alphadata backfill binance_spot_klines_1m crypto_pilot --start 2024-01` | `ingestion.pipeline.run_backfill`. `--start`/`--end` nhận `YYYY-MM` (đầu/cuối tháng) hoặc `YYYY-MM-DD`; `--end` mặc định là hôm qua. `--resume ID` thì bỏ universe và ngày |
 | `datasets` | | Liệt kê dataset đã đăng ký, nguồn, bảng, secret cần có |
 | `universes` | | Liệt kê universe và số member |
 | `catalog [--layer silver\|gold]` | | `metadata.catalog` |
@@ -36,6 +36,7 @@ Entrypoint: `alphadata` (khai báo trong `pyproject.toml`) và `python -m alphad
   - **1 (lỗi)**: lỗi trong lúc chạy (pipeline, DQ, checksum, raw không còn, SQL sai, file universe hỏng, disk dưới ngưỡng ở lệnh `disk`).
   - Message lỗi in ra stderr dạng `error: <Loại lỗi>: <message>`, đã che key. `-v/--verbose` in thêm traceback (cũng đã che key) và log mức DEBUG.
 - `run-universe`: chạy từng member, member lỗi không dừng member khác, cuối cùng in bảng `member, status, rows_in, rows_out, error`. Exit 0 nếu tất cả thành công; 3 nếu mọi member không thành công đều là `NotAvailableYet` (cron thử lại sau); còn lại 1. Chỉ chạy member hoạt động vào ngày `--on`, hoặc ngày lấy từ `period`/`date` nếu đó là một ngày `YYYY-MM-DD`.
+- `backfill`: in `backfill_id=<id> partitions_to_run=<n>` ra stderr **trước khi chạy** (bị kill vẫn còn id để `--resume`), cuối cùng in tổng kết lần chạy và toàn bộ backfill. Exit 0 nếu không còn partition nào chưa `done`; 3 nếu phần còn lại chỉ do `NotAvailableYet`; còn lại 1 (kể cả dừng vì hết disk), kèm gợi ý lệnh `--resume`.
 - `query`: DuckDB trong bộ nhớ qua `access.views.connect` (view cho mọi bảng đã có file, timezone UTC), in tối đa `--limit` dòng (mặc định 100). SQL sai thì in danh sách view có sẵn.
 - Log ra stderr, kết quả ra stdout (bảng chữ căn cột). Stdout/stderr được chuyển sang UTF-8 khi chạy, vì console Windows mặc định không in được tiếng Việt.
 - Không hỏi tương tác (chạy được trong cron, nohup).

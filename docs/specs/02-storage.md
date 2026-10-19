@@ -23,8 +23,7 @@ Mọi thao tác đọc ghi file của lake đi qua module này: bố cục thư 
 ├── raw/<source>/<dataset>/<k1=v1>/<k2=v2>/<fetch_date>/<file>
 │                                                      └── <file>.manifest.json
 ├── silver/<table>/<k=v>/.../part.parquet
-├── gold/<table>/<k=v>/.../part.parquet
-└── checkpoints/<dataset>/<backfill_id>.json
+└── gold/<table>/<k=v>/.../part.parquet
 ```
 
 - Thứ tự `k=v` trong raw: các `partition_keys` của dataset theo thứ tự khai báo, sau đó các khoá còn lại theo alphabet.
@@ -35,7 +34,6 @@ Mọi thao tác đọc ghi file của lake đi qua module này: bố cục thư 
 raw_dir(settings, source, dataset, partition, *, partition_keys, fetch_date) -> Path
 table_file(settings, layer: "silver" | "gold", table, partition=None) -> Path   # .../part.parquet
 table_dir(settings, layer, table) -> Path
-checkpoint_file(settings, dataset, backfill_id) -> Path
 ```
 
 **An toàn đường dẫn** (giá trị partition có thể đến từ CLI):

@@ -1,6 +1,6 @@
 import io
 from collections.abc import Callable, Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -55,9 +55,18 @@ class FakeBars(Dataset):
         self.keep_raw = keep_raw
         self.fetch_calls = 0
         self.normalize_hook: Callable[[pd.DataFrame], pd.DataFrame] | None = None
+        self.interrupt_at: int | None = None  # giả lập bị kill (Ctrl-C) ở lần fetch thứ N
+
+    def backfill_partitions(self, member: str, start: date, end: date) -> list[Partition]:
+        days = (end - start).days + 1
+        return [
+            {"symbol": member, "date": (start + timedelta(days=i)).isoformat()} for i in range(days)
+        ]
 
     def fetch(self, ctx: FetchContext, partition: Partition) -> list[RawFile]:
         self.fetch_calls += 1
+        if self.interrupt_at == self.fetch_calls:
+            raise KeyboardInterrupt
         path = self.remote / f"{partition['symbol']}-{partition['date']}.csv"
         if not path.is_file():
             raise NotAvailableYet(f"{path.name} not published yet")
