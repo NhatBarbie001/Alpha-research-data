@@ -73,6 +73,9 @@ class Dataset(ABC):
         SourceFormatChanged.
         """
 
+    def validate(self, partition: Partition) -> None:  # noqa: B027 - hook tuỳ chọn
+        """Kiểm giá trị partition (raise ValueError) trước khi ghi run nào. Mặc định không kiểm."""
+
     def checks(self, partition: Partition) -> list[Check]:
         return default_checks(self.schema)
 

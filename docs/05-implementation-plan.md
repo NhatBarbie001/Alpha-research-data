@@ -127,7 +127,7 @@ P0-01 ─┬─► P0-02 ─┬─► P0-03 ─► P0-04 ─┐
 ### 4.2 Gate G0
 
 - [ ] CI xanh; độ phủ test ≥ 80% cho `core`, `storage`, `schemas`, `quality`, `ingestion.pipeline`.
-- [ ] `alphadata run binance_spot_klines_1m symbol=BTCUSDT date=<hôm qua>` trên bee tạo đủ: raw + manifest, file silver, 1 dòng `ingestion_runs`, các dòng `dq_results`, dòng `table_catalog`.
+- [ ] `alphadata run binance_spot_klines_1m symbol=BTCUSDT period=<hôm qua>` trên bee tạo đủ: raw + manifest, file silver, 1 dòng `ingestion_runs`, các dòng `dq_results`, dòng `table_catalog`.
 - [ ] Chạy lại lệnh trên: silver giống hệt, không sinh dòng trùng.
 - [ ] Xoá silver, chạy lại từ raw với mạng bị chặn: silver giống hệt.
 - [ ] DAG `binance_daily` chạy 3 ngày liên tiếp cho cả `crypto_pilot`, không sửa tay.

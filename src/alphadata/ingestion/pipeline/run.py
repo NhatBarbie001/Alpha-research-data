@@ -147,6 +147,7 @@ def validate_partition(ds: Dataset, partition: Mapping[str, object]) -> Partitio
     empty = [k for k, v in part.items() if not v.strip()]
     if empty:
         raise ValueError(f"{ds.name} partition has empty values for {empty}")
+    ds.validate(dict(part))
     return part
 
 

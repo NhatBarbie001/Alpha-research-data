@@ -20,7 +20,7 @@ REST API (`api.binance.com`) chỉ dùng để vá lỗ hổng khi file zip thi�
 
 | Dataset | Bảng silver | Partition | File nguồn | keep_raw |
 |---|---|---|---|---|
-| `binance_spot_klines_1m` | `crypto_bars_1m` | symbol, date (hằng ngày) hoặc symbol, month (backfill) | `spot/daily/klines/<SYM>/1m/<SYM>-1m-<YYYY-MM-DD>.zip`, `spot/monthly/klines/<SYM>/1m/<SYM>-1m-<YYYY-MM>.zip` | False |
+| `binance_spot_klines_1m` | `crypto_bars_1m` | symbol, period: `YYYY-MM-DD` (file ngày, hằng ngày) hoặc `YYYY-MM` (file tháng, backfill) | `spot/daily/klines/<SYM>/1m/<SYM>-1m-<YYYY-MM-DD>.zip`, `spot/monthly/klines/<SYM>/1m/<SYM>-1m-<YYYY-MM>.zip` | False |
 | `binance_funding_rate` | `crypto_funding_rates` | symbol, month | `futures/um/monthly/fundingRate/<SYM>/<SYM>-fundingRate-<YYYY-MM>.zip` | True |
 | `binance_futures_metrics` | `crypto_futures_metrics_5m` | symbol, date | `futures/um/daily/metrics/<SYM>/<SYM>-metrics-<YYYY-MM-DD>.zip` | True |
 
@@ -29,7 +29,9 @@ REST API (`api.binance.com`) chỉ dùng để vá lỗ hổng khi file zip thi�
 **Klines 1m.** CSV không có header, 12 cột: open_time, open, high, low, close, volume, close_time, quote_volume, count, taker_buy_base, taker_buy_quote, ignore.
 - `ts_utc = open_time`. **Từ 2025-01-01, timestamp của spot là micro-giây**, trước đó là mili-giây. Dùng `core.timeutil.epoch_to_utc` tự nhận đơn vị theo độ lớn, không hard-code theo ngày.
 - Bỏ `close_time`, `ignore`. `count` → `trades`.
-- Một số file có dòng header, một số không: phát hiện bằng cách thử parse dòng đầu.
+- Một số file có dòng header, một số không: coi là header khi trường đầu của dòng đầu **không phải số**. Không dùng `isdigit()`, vì dòng dữ liệu hỏng (ví dụ `1735603200000.5`) sẽ bị coi nhầm là header và âm thầm bị bỏ. Các file 2024–2026 đã tải đều không có header.
+- Zip phải chứa đúng một file CSV 12 cột; `open_time`, `count` phải là số nguyên; giá trị không phải số hoặc trộn hai đơn vị epoch trong một file thì raise `SourceFormatChanged`.
+- Đã kiểm trên file thật (2026-10-19): `BTCUSDT-1m-2024-12-31` dùng mili-giây, `BTCUSDT-1m-2025-01-01` dùng micro-giây, file tháng `BTCUSDT-1m-2024-01` có 44 640 dòng. Fixture test là các file này cắt còn 3 dòng đầu và dòng cuối (`tests/ingestion/sources/binance/fixtures/`).
 
 **Funding rate.** Cột: calc_time, funding_interval_hours, last_funding_rate → `ts_utc`, `funding_interval_hours`, `funding_rate`.
 
@@ -41,25 +43,26 @@ Kiểm tra lại tên cột của funding và metrics khi viết connector, vì 
 
 | Check | Mức |
 |---|---|
-| SHA-256 khớp file `.CHECKSUM` | error (raise trước khi lưu raw) |
+| SHA-256 khớp file `.CHECKSUM` (dạng `<sha256>  <tên file>`) | Trong `fetch`, trước khi lưu raw: sai thì `SourceFormatChanged`, không ghi gì |
 | `ts_in_range` trong ngày/tháng của partition | error |
-| `row_count` = 1440 × số ngày (klines) | warn |
+| `row_count` = 1440 × số ngày của period (klines) | warn |
 | `ohlc_consistent`, `non_negative` | warn |
 
 ## Hành vi đặc biệt
 
-- File ngày chưa có (404) → `NotAvailableYet`.
+- `validate` chạy trước khi ghi run: `symbol` phải khớp `^[A-Z0-9]{5,20}$` (đi thẳng vào URL), `period` phải là ngày hoặc tháng hợp lệ.
+- File zip hoặc file `.CHECKSUM` chưa có (404) → `NotAvailableYet`.
 - Backfill dùng file tháng. Tháng hiện tại chưa có file tháng thì dùng file ngày.
 - Silver `crypto_bars_1m` một file mỗi `symbol/year/month`. Run hằng ngày merge ngày mới vào file tháng.
 - Cặp đã bị hủy niêm yết vẫn còn file lịch sử trên data.binance.vision, tải được bình thường.
 
 ## Lịch
 
-01:00 UTC hằng ngày (08:00 giờ VN), tải ngày UTC hôm trước. Retry 4 lần, cách 30 phút.
+01:00 UTC hằng ngày (08:00 giờ VN), tải ngày UTC hôm trước (`period` = ngày đó). Retry 4 lần, cách 30 phút.
 
 ## Dung lượng
 
-Đo thực tế: ~28 MB / cặp / năm (Parquet, BTCUSDT 2024). Funding và metrics không đáng kể.
+Đo thực tế: ~28 MB / cặp / năm (Parquet, BTCUSDT 2024). Đo lại qua pipeline ngày 2026-10-19: file tháng BTCUSDT 2024-01 là 2,41 MB (≈ 29 MB/năm), một ngày mất < 1 giây. Funding và metrics không đáng kể.
 
 ## Done when
 
