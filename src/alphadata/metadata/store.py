@@ -311,8 +311,12 @@ class MetaStore:
 
     def last_success(self, dataset: str, partition: Mapping[str, object]) -> datetime | None:
         """Thời điểm xong của lần chạy thành công gần nhất cho đúng (dataset, partition)."""
+        run = self.last_success_run(dataset, partition)
+        return None if run is None else run.finished_at
+
+    def last_success_run(self, dataset: str, partition: Mapping[str, object]) -> RunRecord | None:
         q = (
-            sa.select(t.ingestion_runs.c.finished_at)
+            sa.select(t.ingestion_runs)
             .where(
                 t.ingestion_runs.c.dataset == dataset,
                 t.ingestion_runs.c.status == "success",
@@ -322,7 +326,8 @@ class MetaStore:
             .limit(1)
         )
         with self.engine.connect() as conn:
-            return _utc(conn.execute(q).scalar_one_or_none())
+            row = conn.execute(q).one_or_none()
+        return None if row is None else _run_record(row)
 
 
 def _partition_equals(

@@ -5,6 +5,7 @@ description = "Tầng data cho Alpha research agent: crawl, chuẩn hoá, point-
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "filelock>=3.16",
     "pandas>=3.0.6",
     "psycopg[binary]>=3.2",
     "pyarrow>=26.0.0",
@@ -44,6 +45,9 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM", "RUF", "S"]
 [tool.mypy]
 python_version = "3.12"
 files = ["src", "tests"]
+mypy_path = ["src"]
+# tests/*/conftest.py trùng tên: map theo đường dẫn (tests.metadata.conftest, ...).
+explicit_package_bases = true
 strict = true
 
 [tool.pytest.ini_options]
