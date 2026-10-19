@@ -14,7 +14,9 @@ from alphadata.core import http
 from alphadata.core.errors import NotAvailableYet, SourceFormatChanged
 from alphadata.core.settings import Settings
 from alphadata.ingestion.pipeline import FetchContext, get_dataset, run_partition
-from alphadata.ingestion.sources.binance.common import parse_period
+from alphadata.ingestion.sources.binance import common
+from alphadata.ingestion.sources.binance.common import backfill_periods, parse_period
+from alphadata.ingestion.sources.binance.constants import MONTHLY_PUBLISH_DELAY_DAYS
 from alphadata.ingestion.sources.binance.klines import (
     BinanceSpotKlines1m,
     kline_url,
@@ -317,3 +319,62 @@ def test_live_download_two_days_ago(settings: Settings, meta: MetaStore) -> None
         BinanceSpotKlines1m(), {"symbol": "BTCUSDT", "period": day}, settings=settings, meta=meta
     )
     assert result.rows_in >= 1400
+
+
+# --- chia lịch sử cho backfill ------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "today", "expected"),
+    [
+        # Tháng trọn vẹn đã có file tháng → YYYY-MM; ngày lẻ hai đầu → file ngày.
+        (
+            date(2024, 1, 30),
+            date(2024, 3, 2),
+            date(2026, 10, 19),
+            ["2024-01-30", "2024-01-31", "2024-02", "2024-03-01", "2024-03-02"],
+        ),
+        (
+            date(2024, 1, 1),
+            date(2024, 12, 31),
+            date(2026, 10, 19),
+            [f"2024-{m:02d}" for m in range(1, 13)],
+        ),
+        # Tháng 9/2026 vừa hết nhưng file tháng chưa chắc đã đăng (hôm nay 2/10): dùng file ngày.
+        (
+            date(2026, 9, 29),
+            date(2026, 10, 1),
+            date(2026, 10, 2),
+            ["2026-09-29", "2026-09-30", "2026-10-01"],
+        ),
+        (date(2026, 9, 1), date(2026, 9, 30), date(2026, 10, 6), ["2026-09"]),
+        (
+            date(2026, 9, 1),
+            date(2026, 9, 30),
+            date(2026, 10, 5),
+            [f"2026-09-{d:02d}" for d in range(1, 31)],
+        ),
+    ],
+    ids=[
+        "edges",
+        "full-year",
+        "month-not-published",
+        "published-after-delay",
+        "one-day-before-delay",
+    ],
+)
+def test_backfill_periods(start: date, end: date, today: date, expected: list[str]) -> None:
+    assert backfill_periods(start, end, today, MONTHLY_PUBLISH_DELAY_DAYS) == expected
+
+
+def test_backfill_partitions_use_symbol_and_today(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(common, "utc_today", lambda: date(2026, 10, 19))
+    parts = BinanceSpotKlines1m().backfill_partitions(
+        "ETHUSDT", date(2024, 1, 1), date(2024, 2, 29)
+    )
+    assert parts == [
+        {"symbol": "ETHUSDT", "period": "2024-01"},
+        {"symbol": "ETHUSDT", "period": "2024-02"},
+    ]
+    with pytest.raises(ValueError, match="symbol"):
+        BinanceSpotKlines1m().backfill_partitions("eth", date(2024, 1, 1), date(2024, 1, 2))

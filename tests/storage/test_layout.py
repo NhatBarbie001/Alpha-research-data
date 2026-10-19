@@ -72,10 +72,3 @@ def test_unpartitioned_gold_table() -> None:
     assert layout.table_file(S, "gold", "security_master") == Path(
         "/lake/gold/security_master/part.parquet"
     )
-
-
-def test_checkpoint_file() -> None:
-    path = layout.checkpoint_file(S, "alpaca_bars_1m", "3f2a-9c")
-    assert path == Path("/lake/checkpoints/alpaca_bars_1m/3f2a-9c.json")
-    with pytest.raises(ValueError, match="backfill_id"):
-        layout.checkpoint_file(S, "alpaca_bars_1m", "../evil")

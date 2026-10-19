@@ -6,8 +6,9 @@ import io
 import logging
 import sys
 import traceback
+import uuid
 from collections.abc import Callable, Iterable, Sequence
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any, NoReturn
 
@@ -27,6 +28,7 @@ from alphadata.ingestion.pipeline import (
     get_dataset,
     list_datasets,
     reprocess_partition,
+    run_backfill,
     run_partition,
     validate_partition,
 )
@@ -204,6 +206,83 @@ def run_universe(
 
 
 @cli.command()
+@click.argument("dataset")
+@click.argument("universe_name", required=False)
+@click.option("--start", help="YYYY-MM hoặc YYYY-MM-DD; mặc định là start của universe.")
+@click.option("--end", help="YYYY-MM (hết tháng) hoặc YYYY-MM-DD; mặc định và tối đa là hôm qua.")
+@click.option("--resume", "resume_id", help="backfill_id cũ: chỉ chạy partition chưa xong.")
+@click.option("--workers", type=click.IntRange(1, 16), default=1, show_default=True)
+@exit_codes
+def backfill(
+    dataset: str,
+    universe_name: str | None,
+    start: str | None,
+    end: str | None,
+    resume_id: str | None,
+    workers: int,
+) -> None:
+    """Tải lịch sử cho mọi member của universe, có checkpoint để resume khi bị ngắt."""
+    ds = _dataset(dataset)
+    settings = get_settings()
+    backfill_id: uuid.UUID | None = None
+    if resume_id is not None:
+        if universe_name or start or end:
+            raise click.UsageError(
+                "--resume continues an existing backfill; omit universe/--start/--end"
+            )
+        try:
+            backfill_id = uuid.UUID(resume_id)
+        except ValueError:
+            raise click.UsageError(
+                f"--resume must be a backfill_id (UUID), got {resume_id!r}"
+            ) from None
+    elif universe_name is None:
+        raise click.UsageError("UNIVERSE is required for a new backfill (or pass --resume ID)")
+
+    def announce(bid: uuid.UUID, count: int) -> None:
+        # In trước khi chạy: bị kill giữa chừng vẫn còn id để --resume.
+        click.echo(f"backfill_id={bid} partitions_to_run={count}", err=True)
+
+    try:
+        result = run_backfill(
+            ds,
+            universe_name,
+            _parse_bound(start, "--start", is_end=False),
+            _parse_bound(end, "--end", is_end=True),
+            backfill_id=backfill_id,
+            max_workers=workers,
+            settings=settings,
+            on_planned=announce,
+        )
+    except (KeyError, ValueError, NotImplementedError) as exc:
+        raise click.UsageError(_message(exc)) from None
+
+    s = result.summary
+    rows = [
+        ["backfill_id", str(result.backfill_id)],
+        ["dataset", result.dataset],
+        [
+            "this run",
+            f"{result.attempted} attempted, {result.succeeded} done, "
+            f"{result.failed} failed, {result.not_available} not available yet",
+        ],
+        [
+            "overall",
+            f"done={s.get('done', 0)} failed={s.get('failed', 0)} pending={s.get('pending', 0)}",
+        ],
+        ["stopped", result.stopped or "no"],
+    ]
+    click.echo(format_table(["item", "value"], rows, max_width=120))
+    if result.remaining == 0:
+        return
+    click.echo(
+        f"resume with: alphadata backfill {result.dataset} --resume {result.backfill_id}", err=True
+    )
+    only_not_available = not result.stopped and result.failed == 0 and result.not_available > 0
+    click.get_current_context().exit(EXIT_NOT_AVAILABLE if only_not_available else EXIT_ERROR)
+
+
+@cli.command()
 @exit_codes
 def datasets() -> None:
     """Liệt kê dataset đã đăng ký: nguồn, bảng, khoá partition, secret cần có."""
@@ -290,7 +369,6 @@ def disk() -> None:
         ("raw", settings.raw_dir),
         ("silver", settings.silver_dir),
         ("gold", settings.gold_dir),
-        ("checkpoints", settings.checkpoint_dir),
     ]
     rows: list[list[object]] = [[name, f"{_dir_size(path) / 1e6:.1f} MB"] for name, path in layers]
     status = "OK" if free >= settings.min_free_gb else "LOW"
@@ -339,6 +417,19 @@ def _print_result(r: RunResult) -> None:
         ("warnings", "; ".join(warns) if warns else "none"),
     ]
     click.echo("\n".join(f"{k:<10} {v}" for k, v in lines))
+
+
+def _parse_bound(text: str | None, what: str, *, is_end: bool) -> date | None:
+    """YYYY-MM-DD, hoặc YYYY-MM (ngày đầu tháng cho --start, ngày cuối tháng cho --end)."""
+    if text is None:
+        return None
+    if len(text) == 7:
+        first = _parse_day(f"{text}-01", what)
+        if not is_end:
+            return first
+        next_month = date(first.year + first.month // 12, first.month % 12 + 1, 1)
+        return next_month - timedelta(days=1)
+    return _parse_day(text, what)
 
 
 def _parse_day(text: str, what: str) -> date:

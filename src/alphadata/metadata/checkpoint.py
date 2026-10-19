@@ -95,6 +95,12 @@ class Checkpoints:
             if result.rowcount != 1:
                 raise KeyError(f"partition {dict(partition)} not in backfill {backfill_id}")
 
+    def dataset_of(self, backfill_id: uuid.UUID) -> str | None:
+        """Dataset của một backfill; None nếu backfill_id chưa từng được lập kế hoạch."""
+        q = sa.select(_bc.c.dataset).where(_bc.c.backfill_id == backfill_id).limit(1)
+        with self._engine.connect() as conn:
+            return conn.execute(q).scalar_one_or_none()
+
     def summary(self, backfill_id: uuid.UUID) -> dict[str, int]:
         q = (
             sa.select(_bc.c.status, sa.func.count())

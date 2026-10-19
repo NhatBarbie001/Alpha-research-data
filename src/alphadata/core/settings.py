@@ -46,10 +46,6 @@ class Settings:
     def gold_dir(self) -> Path:
         return self.data_root / "gold"
 
-    @property
-    def checkpoint_dir(self) -> Path:
-        return self.data_root / "checkpoints"
-
     def secret(self, name: str) -> str:
         if name not in SECRET_NAMES:
             raise ValueError(f"unknown secret name: {name}")

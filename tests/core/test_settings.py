@@ -78,4 +78,3 @@ def test_derived_dirs() -> None:
     assert s.raw_dir == Path("/lake/raw")
     assert s.silver_dir == Path("/lake/silver")
     assert s.gold_dir == Path("/lake/gold")
-    assert s.checkpoint_dir == Path("/lake/checkpoints")

@@ -11,7 +11,6 @@ Layer = Literal["silver", "gold"]
 PART_FILE = "part.parquet"
 
 _NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
-_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def raw_dir(
@@ -44,13 +43,6 @@ def table_file(
     """<layer>/<table>/<k=v>.../part.parquet; thứ tự k=v giữ nguyên thứ tự của `partition`."""
     segments = partition_segments(partition or {}, list(partition or {}))
     return table_dir(settings, layer, table).joinpath(*segments) / PART_FILE
-
-
-def checkpoint_file(settings: Settings, dataset: str, backfill_id: str) -> Path:
-    _check_name(dataset, "dataset")
-    if not _ID_RE.fullmatch(backfill_id):
-        raise ValueError(f"invalid backfill_id: {backfill_id!r}")
-    return settings.checkpoint_dir / dataset / f"{backfill_id}.json"
 
 
 def partition_segments(partition: Mapping[str, object], key_order: Sequence[str]) -> list[str]:

@@ -29,6 +29,31 @@ def parse_period(period: str) -> tuple[PeriodKind, date, date]:
     raise ValueError(f"period must be YYYY-MM-DD or YYYY-MM, got {period!r}")
 
 
+def utc_today() -> date:
+    return datetime.now(UTC).date()
+
+
+def backfill_periods(start: date, end: date, today: date, publish_delay_days: int) -> list[str]:
+    """Chia [start, end]: tháng trọn vẹn đã có file tháng → `YYYY-MM`, còn lại theo ngày."""
+    periods: list[str] = []
+    day = start
+    while day <= end:
+        month_start = day.replace(day=1)
+        next_month = date(month_start.year + month_start.month // 12, month_start.month % 12 + 1, 1)
+        month_end = next_month - timedelta(days=1)
+        whole_month = day == month_start and month_end <= end
+        published = today >= next_month + timedelta(days=publish_delay_days)
+        if whole_month and published:
+            periods.append(f"{month_start.year:04d}-{month_start.month:02d}")
+            day = next_month
+            continue
+        last = min(end, month_end)
+        while day <= last:
+            periods.append(day.isoformat())
+            day += timedelta(days=1)
+    return periods
+
+
 def period_bounds(period: str) -> tuple[datetime, datetime]:
     _, start, end = parse_period(period)
     return (

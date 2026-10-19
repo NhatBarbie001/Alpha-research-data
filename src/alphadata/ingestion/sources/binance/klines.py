@@ -1,11 +1,14 @@
 import io
+from datetime import date
 
 import pandas as pd
 
 from alphadata.core.errors import SourceFormatChanged
 from alphadata.core.timeutil import epoch_to_utc
 from alphadata.ingestion.pipeline import Dataset, FetchContext, Partition
+from alphadata.ingestion.sources.binance import common
 from alphadata.ingestion.sources.binance.common import (
+    backfill_periods,
     download_verified,
     parse_period,
     period_bounds,
@@ -17,6 +20,7 @@ from alphadata.ingestion.sources.binance.constants import (
     KLINE_COLUMNS,
     LICENSE_NOTE,
     MINUTES_PER_DAY,
+    MONTHLY_PUBLISH_DELAY_DAYS,
     SOURCE_URL,
 )
 from alphadata.quality import (
@@ -59,6 +63,11 @@ class BinanceSpotKlines1m(Dataset):
     def validate(self, partition: Partition) -> None:
         validate_symbol(partition["symbol"])
         parse_period(partition["period"])
+
+    def backfill_partitions(self, member: str, start: date, end: date) -> list[Partition]:
+        validate_symbol(member)
+        periods = backfill_periods(start, end, common.utc_today(), MONTHLY_PUBLISH_DELAY_DAYS)
+        return [{"symbol": member, "period": p} for p in periods]
 
     def fetch(self, ctx: FetchContext, partition: Partition) -> list[RawFile]:
         return [download_verified(ctx, kline_url(partition["symbol"], partition["period"]))]

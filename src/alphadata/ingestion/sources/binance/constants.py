@@ -24,3 +24,6 @@ KLINE_COLUMNS = (
     "ignore",
 )
 MINUTES_PER_DAY = 1440
+
+# File tháng được đăng đầu tháng sau; chờ thêm vài ngày rồi mới dùng file tháng khi backfill.
+MONTHLY_PUBLISH_DELAY_DAYS = 5
