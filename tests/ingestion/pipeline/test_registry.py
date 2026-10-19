@@ -10,6 +10,7 @@ from alphadata.ingestion.pipeline import registry as reg
 @pytest.fixture(autouse=True)
 def empty_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(reg, "_DATASETS", {})
+    monkeypatch.setattr(reg, "_sources_loaded", True)  # không nạp nguồn thật vào registry rỗng
 
 
 @pytest.fixture

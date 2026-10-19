@@ -43,6 +43,7 @@ class Dataset(ABC):
     @abstractmethod
     def normalize(self, raws: list[RawFile], partition: Partition) -> pd.DataFrame: ...
 
+    def validate(self, partition) -> None: ...                # raise ValueError; mặc định không kiểm
     def checks(self, partition) -> list[Check]: ...           # mặc định: quality.default_checks(schema)
     def merge(self, existing, new) -> pd.DataFrame: ...       # mặc định: storage.upsert theo khoá của schema
     def read(self, raw: RawFile) -> bytes: ...                # storage.read_raw: đọc có kiểm checksum
@@ -78,7 +79,7 @@ run_partition(dataset: str | Dataset, partition, *, trigger="cli", settings=None
 Không truyền `settings`, `meta`, `session` thì tự tạo (và tự đóng `meta`, `session` khi xong).
 
 Các bước:
-1. Tra dataset. Partition phải có **đúng** bộ khoá `partition_keys` (thiếu, thừa hoặc giá trị rỗng thì `ValueError`); giá trị được đổi thành chuỗi. Kiểm tra đủ secret trong `requires` (`MissingCredential`).
+1. Tra dataset. Partition phải có **đúng** bộ khoá `partition_keys` (thiếu, thừa hoặc giá trị rỗng thì `ValueError`); giá trị được đổi thành chuỗi; gọi `dataset.validate(partition)` để connector kiểm giá trị (ví dụ format ngày, ký tự hợp lệ trong mã). Kiểm tra đủ secret trong `requires` (`MissingCredential`).
 2. `storage.check_disk`. Lỗi ở bước 1 và 2 chưa ghi run nào.
 3. `meta.start_run`.
 4. `fetch` → `meta.record_raw` cho từng file. Đường dẫn raw trong metadata là tương đối với `data_root`.
