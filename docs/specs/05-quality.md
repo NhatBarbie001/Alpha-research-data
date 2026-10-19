@@ -27,13 +27,30 @@ Không bao giờ âm thầm xoá dòng lỗi.
 | `warn` | Vẫn ghi, kết quả được lưu và hiện trong báo cáo DQ |
 
 ```python
-@dataclass
+@dataclass(frozen=True)
 class CheckResult:
     name: str
-    severity: str   # "error" | "warn"
+    severity: "error" | "warn"
     passed: bool
-    detail: str     # ví dụ "bad_rows=3"
+    detail: str     # ví dụ "bad_rows=3 sample=[...]", tối đa 500 ký tự
+
+@dataclass(frozen=True)
+class Check:        # check đã gắn tham số, ví dụ ts_in_range("ts_utc", start, end)
+    name: str
+    severity: "error" | "warn"
+    fn: Callable[[DataFrame], tuple[bool, str]]
 ```
+
+## Runner
+
+```python
+run_checks(df, checks, *, table_name, meta=None, run_id=None) -> list[CheckResult]
+```
+
+- Chạy **mọi** check, ghi tất cả vào `dq_results` (nếu có `meta`), **rồi mới** raise `DataQualityError` khi có check `error` fail. Ghi trước khi raise để lỗi luôn thấy được trong báo cáo DQ.
+- Check tự lỗi khi chạy (ví dụ thiếu cột) được tính là fail ở đúng mức của nó, detail ghi `check raised KeyError: ...`. Một check `warn` bị lỗi không chặn ghi; một check `error` bị lỗi thì chặn.
+- Tên check trong một lần chạy không được trùng.
+- `CheckResult` thoả protocol `CheckLike` của `metadata`, nên `metadata` không cần import `quality`.
 
 ## Check trước khi ghi
 
@@ -50,7 +67,19 @@ class CheckResult:
 | `price_jump` | warn | Daily: thay đổi > 50% trong một bar (có thể là split chưa điều chỉnh hoặc lỗi) |
 | `vintage_order` | error | Macro: `available_from <= available_to`, không có hai vintage chồng nhau cho cùng một quan sát |
 
-Mỗi connector chọn check của mình bằng cách override `Dataset.checks()`.
+Mỗi connector chọn check của mình bằng cách override `Dataset.checks(partition)`, trả danh sách `Check` đã gắn tham số theo partition (ví dụ khoảng thời gian cho `ts_in_range`). Mặc định là `default_checks(schema)`: `not_empty`, `no_null_keys`, `unique_keys`, `schema_match`.
+
+| Hàm | Tham số |
+|---|---|
+| `not_empty()` | |
+| `no_null_keys(key)`, `unique_keys(key)` | Cột khoá (thường là `schema.key`) |
+| `schema_match(schema)` | `TableSchema`. Dùng lại `schemas.conform`, nên chỉ có một bộ luật kiểu dữ liệu |
+| `ts_in_range(column, start, end)` | Khoảng `[start, end)`, phải có timezone |
+| `ohlc_consistent()` | Cần cột `open`, `high`, `low`, `close`; bắt cả `low > high` |
+| `non_negative(columns)` | |
+| `row_count(expected)` | Số dòng chính xác |
+
+**Tiến độ:** 8 check đầu bảng có từ P0-06. `price_jump` làm cùng Yahoo (P1-03), `vintage_order` cùng FRED (P1-04). Check sau khi ghi làm ở P1-07, `price_coverage` ở P3-03, `referential` ở P2-07.
 
 ## Check sau khi ghi
 
