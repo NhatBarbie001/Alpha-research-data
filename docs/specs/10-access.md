@@ -11,7 +11,7 @@ Lớp duy nhất agent dùng để đọc data. Read-only, `as_of` bắt buộc,
 
 | File | Nội dung |
 |---|---|
-| `views.py` | `connect()`: mở DuckDB, tạo view cho mọi bảng silver và gold có file |
+| `views.py` | `connect()`: mở DuckDB, tạo view cho mọi bảng silver, reference và gold có file (có từ P0-10, dùng cho CLI `query`) |
 | `api.py` | `get_bars`, `get_macro`, `get_fundamentals`, `get_universe`, `get_factors` |
 
 ## API
@@ -44,6 +44,17 @@ Nguồn miễn phí thiếu giá của một số mã đã hủy niêm yết (xe
 - `tradable_only=False` trả đủ thành viên, kể cả mã thiếu giá, để agent tự quyết cách xử lý.
 - `get_coverage` trả một dòng cho mỗi năm trong `[start, end]` (bị cắt về `as_of`): `year`, `member_days`, `priced_days`, `coverage`. Kết quả backtest nên kèm con số này.
 - Docstring của `get_universe` và `get_bars` ghi rõ giới hạn này.
+
+## `views.connect`
+
+```python
+connect(settings=None, *, layers=("silver", "reference", "gold"), memory_limit="2GB", threads=2) -> duckdb.DuckDBPyConnection
+```
+
+- DuckDB trong bộ nhớ, `SET TimeZone = 'UTC'` (mặc định DuckDB hiển thị theo giờ máy, ví dụ `+07:00`, dễ gây nhầm).
+- Mỗi bảng trong `schemas` đã có ít nhất một file thì có view cùng tên: `read_parquet('<path_pattern>', union_by_name = true, hive_partitioning = false)`.
+- Không bật `hive_partitioning`: giá trị partition trong đường dẫn đã mã hoá `%XX` (ví dụ `^GSPC` → `%5EGSPC`), còn cột trong file giữ giá trị gốc. Cột suy ra (`year`, `month`) vì vậy không có trong view; lọc theo `ts_utc`.
+- Kết quả có cột `TIMESTAMPTZ` cần thư viện `pytz` (DuckDB yêu cầu), đã có trong dependency.
 
 ## Truy cập SQL
 

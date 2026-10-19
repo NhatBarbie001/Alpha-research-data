@@ -41,6 +41,16 @@ uv run ruff check && uv run ruff format --check
 uv run mypy
 ```
 
+Chạy thử pipeline (dữ liệu ghi vào `ALPHADATA_ROOT`, mặc định `./data`):
+
+```bash
+uv run alphadata --help
+uv run alphadata run binance_spot_klines_1m symbol=BTCUSDT period=2026-10-18
+uv run alphadata run-universe crypto_pilot period=2026-10-18
+uv run alphadata runs --limit 10
+uv run alphadata query "SELECT symbol, count(*) FROM crypto_bars_1m GROUP BY symbol"
+```
+
 CI (`.github/workflows/ci.yml`) chạy các bước trên cùng quét secret bằng gitleaks cho mọi PR và mọi push lên `main`. Mỗi task trong [docs/05-implementation-plan.md](docs/05-implementation-plan.md) là một PR, nhánh đặt tên theo ID task (ví dụ `p0-02-core`).
 
 ## Quy ước
