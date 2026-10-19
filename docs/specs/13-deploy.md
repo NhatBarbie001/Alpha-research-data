@@ -14,7 +14,6 @@ Dựng toàn bộ stack trên server bee bằng Docker Compose: Airflow 3 + Post
 | `Dockerfile` | Image Airflow 3 chính thức + virtualenv `/home/airflow/alphadata-venv` cài package `alphadata` (bằng `uv`) |
 | `docker-compose.yml` | Service `postgres`, `airflow-init`, `airflow-apiserver`, `airflow-scheduler`, `airflow-dag-processor` |
 | `init-db.sql` | Tạo DB `alphadata_meta` và user riêng của pipeline |
-| `migrations/` | File SQL có số thứ tự cho thay đổi schema của metadata |
 | `backup.sh` | `pg_dump` DB `alphadata_meta` hằng ngày, giữ 7 bản |
 
 ## Mount

@@ -595,7 +595,7 @@ Trên SQLite, `uuid` và `jsonb` lưu dạng `text`.
 | Thêm cột có thể null | Sửa `schemas`, tăng `schema_version` trong catalog. File cũ thiếu cột thì DuckDB đọc ra null (`union_by_name = true`). Không cần ghi lại file cũ |
 | Đổi kiểu, đổi tên, xoá cột, đổi khoá | Tạo bảng mới (ví dụ `equity_bars_1d_v2`), dựng lại từ raw (silver) hoặc từ silver (gold), chuyển `access` sang bảng mới, rồi xoá bảng cũ |
 | Đổi partition | Như trên |
-| Bảng Postgres | File migration SQL có số thứ tự trong `deploy/migrations/`, chạy khi deploy. Không sửa bảng tay |
+| Bảng Postgres | Sửa `metadata/tables.py` (để DB mới đúng bản mới nhất) và thêm file migration SQL có số thứ tự trong `src/alphadata/metadata/migrations/` (để DB cũ lên cùng bản). `MetaStore` tự chạy migration chưa áp dụng khi khởi tạo. Không sửa bảng tay |
 
 Gold và reference luôn dựng lại được hoàn toàn từ silver, nên thay đổi ở gold rẻ. Silver dựng lại được từ raw với các nguồn còn giữ raw; với raw đã xoá (minute) thì phải tải lại từ nguồn.
 
