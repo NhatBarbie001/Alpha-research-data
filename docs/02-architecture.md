@@ -121,7 +121,7 @@ alphadata/                              (repo root)
 │   ├── core/                           settings.py, http.py, errors.py, timeutil.py
 │   ├── storage/                        layout.py, raw.py, parquet.py, disk.py
 │   ├── schemas/                        types.py, conform.py, silver.py, reference.py, gold.py
-│   ├── metadata/                       tables.py, store.py, checkpoint.py
+│   ├── metadata/                       tables.py, schema.py, store.py, checkpoint.py, migrations/
 │   ├── quality/                        checks.py, runner.py, post_checks.py
 │   ├── universe/                       loader.py
 │   ├── ingestion/
@@ -146,7 +146,7 @@ alphadata/                              (repo root)
 │   │   ├── alerts.py
 │   │   └── dags/                       entrypoint cho Airflow (mount vào /opt/airflow/dags)
 │   └── cli/
-├── deploy/                             Dockerfile, docker-compose.yml, init-db.sql, migrations/, backup.sh
+├── deploy/                             Dockerfile, docker-compose.yml, init-db.sql, backup.sh
 ├── tests/                              cấu trúc giống src/alphadata/
 └── docs/
     ├── 01-problem.md
